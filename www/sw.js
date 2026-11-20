@@ -1,6 +1,6 @@
 // Offline support for the installed web app (GitHub Pages).
 // Bump VERSION whenever you change files in www/ so phones pick up the update.
-const VERSION = 'jatah-v1';
+const VERSION = 'jatah-v2';
 const SHELL = [
   './',
   './index.html',

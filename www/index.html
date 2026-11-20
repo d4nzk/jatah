@@ -120,6 +120,21 @@ main{display:flex;flex-direction:column;gap:12px}
   .btn:active, .chip:active{transform:scale(.96)}
   .sheet-bg.open{animation:fade .2s ease-out}
   @keyframes fade{from{opacity:0}}
+  .sheet-bg.closing{animation:fadeout .22s ease-in forwards}
+  .sheet-bg.closing .sheet{animation:sheetdown .22s ease-in forwards}
+  @keyframes fadeout{to{opacity:0}}
+  @keyframes sheetdown{to{transform:translateY(48px);opacity:0}}
+  .onboard.open{animation:fade .25s ease-out}
+  .onboard.leaving{animation:fadeout .25s ease-in forwards}
+  .ob-body.fwd{animation:stepfwd .4s cubic-bezier(.22,1,.36,1)}
+  .ob-body.bwd{animation:stepbwd .4s cubic-bezier(.22,1,.36,1)}
+  @keyframes stepfwd{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+  @keyframes stepbwd{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+  .ob-mark .ob-arc{animation:obsweep 1.2s .15s cubic-bezier(.22,1,.36,1) both}
+  @keyframes obsweep{from{stroke-dashoffset:289}}
+  .bell.ring svg{animation:bellring .9s ease-in-out}
+  @keyframes bellring{15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}75%{transform:rotate(2deg)}}
+  .bell .badge{animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
 }
 
 .rows{display:flex;flex-direction:column}
@@ -207,7 +222,7 @@ nav.tabs .add:active .plus{transform:scale(.94)}
 .bar i{display:block;height:100%;background:var(--safe)}
 .bar i.over{background:var(--debt)}
 
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 150px);z-index:30;
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 150px);z-index:30;width:max-content;
   background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;font-size:14px;max-width:calc(100% - 32px);
   box-shadow:0 8px 24px var(--shadow);
   opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%, 12px) scale(.96);
@@ -223,13 +238,76 @@ textarea.inp{font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:
   .sheet-bg.open .sheet{animation:up .22s ease-out}
   @keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
 }
+
+/* Header bell + floating notification panel (takes no space on the page) */
+.top{position:relative}
+.top-r{display:flex;align-items:flex-start;gap:10px}
+.bell{position:relative;flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.bell svg{width:20px;height:20px}
+.bell .badge{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--debt-ink);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+.bell .badge[hidden]{display:none}
+.note-panel{position:fixed;z-index:12;top:calc(env(safe-area-inset-top) + 64px);right:max(16px, calc(50% - 224px));width:min(340px, calc(100vw - 32px));max-height:min(70vh, 520px);overflow:auto;
+  background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 44px var(--shadow);padding:6px;
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-8px) scale(.97);transform-origin:top right;
+  transition:opacity .2s ease, transform .2s ease, visibility 0s linear .2s}
+.note-panel.open{opacity:1;visibility:visible;pointer-events:auto;transform:none;
+  transition:opacity .2s ease, transform .28s cubic-bezier(.34,1.56,.64,1), visibility 0s}
+.np-head{display:flex;justify-content:space-between;align-items:center;padding:10px 10px 6px}
+.np-head b{font-family:var(--display);font-size:17px}
+.np-list{display:flex;flex-direction:column;gap:2px}
+.np-item{display:flex;gap:10px;padding:10px;border-radius:12px}
+.np-item .dot{width:10px;height:10px;border-radius:99px;margin-top:5px;flex:none;background:var(--accent)}
+.np-item.debt .dot{background:var(--debt)} .np-item.danger .dot{background:var(--danger)} .np-item.safe .dot{background:var(--safe)}
+.np-item.unseen{background:var(--accent-soft)}
+.np-item .tt{font-weight:700;font-size:14px}
+.np-item .bb{font-size:13px;color:var(--muted)}
+.np-item .btn{margin-top:8px}
+.np-empty{padding:22px 10px;color:var(--muted);font-size:14px;text-align:center}
+
+/* Spread-out switch in the recurring sheet */
+.switch{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);cursor:pointer}
+.switch[hidden]{display:none}
+.switch input{width:20px;height:20px;accent-color:var(--accent);margin:1px 0 0;flex:none}
+.switch b{font-size:14px}
+
+/* First-time setup */
+.onboard{position:fixed;inset:0;z-index:15;background:var(--bg);overflow:auto;display:none}
+.onboard.open{display:block}
+.ob{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:20px;
+  padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 20px)}
+.ob-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px}
+.ob-top .back{border:0;background:none;color:var(--accent-text);font-weight:700;padding:8px 0}
+.ob-dots{display:flex;gap:6px}
+.ob-dots i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:width .3s, background .3s}
+.ob-dots i.on{width:22px;background:var(--accent)}
+.ob-body{display:flex;flex-direction:column;gap:16px;flex:1}
+.ob h1{font-family:var(--display);font-size:30px;line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.ob .lead{color:var(--muted);margin:0;max-width:42ch}
+.ob-foot{display:flex;flex-direction:column;gap:8px}
+.ob-mark{width:104px;height:104px}
+.ob-points{display:flex;flex-direction:column;gap:10px;margin:4px 0 0;padding:0;list-style:none}
+.ob-points li{display:flex;gap:10px;align-items:center}
+.ob-points li::before{content:"";width:8px;height:8px;border-radius:99px;background:var(--safe);flex:none}
+.choice{display:flex;flex-direction:column;gap:10px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.opt b{font-size:15px}
+.opt span{font-size:13px;color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.calc{font-size:14px;color:var(--accent-text);font-weight:600;min-height:1.4em}
+.err{color:var(--debt-ink) !important}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
     <div class="brand">Jatah<span>.</span></div>
-    <div class="when" id="when"></div>
+    <div class="top-r">
+      <div class="when" id="when"></div>
+      <button type="button" class="bell" id="bellBtn" aria-label="Notifications" aria-expanded="false" aria-controls="notePanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="badge" id="bellBadge" hidden></span>
+      </button>
+    </div>
   </header>
   <main id="view"></main>
 </div>
@@ -243,6 +321,9 @@ textarea.inp{font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:
     <button type="button" data-tab="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Setup</button>
   </div>
 </nav>
+
+<div class="note-panel" id="notePanel" role="dialog" aria-label="Notifications"></div>
+<div class="onboard" id="onboard"></div>
 
 <div class="sheet-bg" id="sheetBg" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheet" id="sheet"></div>
@@ -263,8 +344,10 @@ function settingsFor(st, ym){
   let best = null;
   for (const k of keys) if (k <= ym) best = k;
   if (!best) best = keys[0];
-  return best ? st.months[best] : { monthly: 0, daily: 0 };
+  return best ? st.months[best] : { amount: 0, every: 1, daily: 0 };
 }
+// Budget can arrive every 1-60 months (monthly, per semester, per year...). It's split evenly into months.
+function monthlyOf(s){ return s.amount != null ? Math.floor(s.amount / (s.every || 1)) : (s.monthly || 0); }
 function dueIn(r, ym){
   if (r.active === false) return false;
   const d = ymIdx(ym) - ymIdx(r.start);
@@ -276,26 +359,41 @@ function nextDueAfter(r, ym){ // first due month strictly after ym
   const k = Math.ceil((from - s) / r.every) * r.every;
   return idxYm(s + k);
 }
+const isSpread = r => r.every > 1 && r.spread !== false;
+const perMonth = r => Math.ceil(r.amount / r.every);
+// What a recurring payment takes out of month `ym`.
+// All at once: the full amount in each month it's due.
+// Spread out: amount ÷ every in each of the `every` months leading up to and including a due month,
+// so the money is already set aside when the bill arrives.
+function recChargeIn(r, ym){
+  if (r.active === false) return 0;
+  if (isSpread(r)) return ymIdx(ym) >= ymIdx(r.start) - r.every + 1 ? perMonth(r) : 0;
+  return dueIn(r, ym) ? r.amount : 0;
+}
 function recommendedDaily(finalBudget, days){
-  return finalBudget > 0 ? Math.floor(finalBudget / days / 1000) * 1000 : 0;
+  return finalBudget > 0 && days > 0 ? Math.floor(finalBudget / days / 1000) * 1000 : 0;
 }
 // Summary of month `ym` counted through day `upto` (inclusive).
 function summary(st, ym, upto){
   const s = settingsFor(st, ym), days = daysIn(ym);
-  const recs = st.recurring.filter(r => dueIn(r, ym));
-  const recTotal = sum(recs.map(r => r.amount));
-  const finalBudget = s.monthly - recTotal;
   const startYm = st.start.slice(0, 7), startDay = +st.start.slice(8, 10);
   const firstDay = ym < startYm ? null : (ym === startYm ? startDay : 1);
   const accDays = firstDay === null ? 0 : Math.max(0, Math.min(upto, days) - firstDay + 1);
   const trackDays = firstDay === null ? 0 : days - firstDay + 1;
+  // Joined mid-month and said how much was left: that amount is the whole budget for the rest of the month,
+  // and recurring payments start next month.
+  const midStart = ym === startYm && startDay > 1 && st.startLeft != null;
+  const recs = midStart ? [] : st.recurring.map(r => ({ r, charge: recChargeIn(r, ym) })).filter(x => x.charge > 0);
+  const recTotal = sum(recs.map(x => x.charge));
+  const monthly = midStart ? st.startLeft : monthlyOf(s);
+  const finalBudget = monthly - recTotal;
   const entries = st.spend.filter(e => e.date.slice(0, 7) === ym);
   const spentTo = sum(entries.filter(e => +e.date.slice(8, 10) <= upto).map(e => e.amount));
   const spentMonth = sum(entries.map(e => e.amount));
   const accrued = s.daily * accDays;
   return {
-    ym, days, monthly: s.monthly, daily: s.daily, recs, recTotal, finalBudget,
-    recommended: recommendedDaily(finalBudget, days),
+    ym, days, monthly, amount: s.amount, every: s.every || 1, daily: s.daily, midStart, recs, recTotal, finalBudget,
+    recommended: recommendedDaily(finalBudget, midStart ? trackDays : days),
     firstDay, accDays, trackDays, accrued, spentTo, spentMonth,
     available: accrued - spentTo,
     leftInMonth: finalBudget - spentMonth,
@@ -337,14 +435,20 @@ const everyLabel = n => n === 1 ? 'Every month' : n === 12 ? 'Every year' : n % 
 const KEY = 'jatah.v1';
 let storageOK = true;
 function seed(){
-  const t = todayStr(), ym = t.slice(0, 7);
-  return { v: 1, start: t, months: { [ym]: { monthly: 1000000, daily: 15000 } },
-    recurring: [{ id: uid(), name: 'Claude subscription', amount: 390000, every: 1, start: ym, day: 1, active: true }],
-    spend: [], example: true, tab: 'today' };
+  return { v: 2, start: todayStr(), startLeft: null, months: {}, recurring: [], spend: [], setupDone: false, seen: [], tab: 'today' };
 }
 function load(){
-  try { const s = localStorage.getItem(KEY); if (s){ const o = JSON.parse(s); if (o && o.months) return o; } }
-  catch (e){ storageOK = false; }
+  try {
+    const s = localStorage.getItem(KEY);
+    if (s){
+      const o = JSON.parse(s);
+      if (o && o.months){
+        if (o.setupDone === undefined) o.setupDone = !o.example;  // installs from before the setup screen
+        if (!o.seen) o.seen = [];
+        return o;
+      }
+    }
+  } catch (e){ storageOK = false; }
   return seed();
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; } catch (e){ storageOK = false; } }
@@ -365,13 +469,7 @@ function render(){
   ({ today: renderToday, recurring: renderRecurring, history: renderHistory, setup: renderSetup })[tab]();
   view.classList.remove('enter');
   if (enterNext){ void view.offsetWidth; view.classList.add('enter'); enterNext = false; }
-}
-
-function storageNote(){
-  return storageOK ? '' : '<div class="note warn">This browser is blocking storage, so entries will be lost when you close the page. Open the link in your phone\'s browser instead.</div>';
-}
-function exampleNote(){
-  return state.example ? '<div class="note info"><span>Starting numbers are examples: Rp1.000.000 a month, Rp15.000 a day and a Claude subscription. Set your own in Setup and Recurring.</span><button type="button" data-act="dismiss-example" aria-label="Dismiss">✕</button></div>' : '';
+  updateBell();
 }
 
 function renderToday(){
@@ -392,7 +490,7 @@ function renderToday(){
   else if (st === 'danger') sub = 'Less than a third of today\'s ' + rp(pot) + ' left. Tomorrow adds ' + rp(s.daily) + '.';
   else sub = rp(s.available) + ' left of today\'s ' + rp(pot) + '. Tomorrow adds ' + rp(s.daily) + '.';
 
-  view.innerHTML = storageNote() + exampleNote() + `
+  view.innerHTML = `
   <section class="card hero">
     <div class="gauge ${st} ${spinNext ? 'spin' : ''}">
       ${ringSvg(ring, st)}
@@ -420,8 +518,11 @@ function renderToday(){
   <section class="card">
     <h2>${monthName(ym)}</h2>
     <div class="rows">
-      <div class="row"><span class="k">Budget for the month</span><span class="v">${rp(s.monthly)}</span></div>
-      <div class="row"><span class="k">Recurring taken at the start</span><span class="v">${s.recTotal ? '−' + rp(s.recTotal) : rp(0)}</span></div>
+      ${s.midStart
+        ? `<div class="row"><span class="k">Left when you started on the ${ord(s.firstDay)}</span><span class="v">${rp(s.monthly)}</span></div>
+           <div class="row"><span class="k">Recurring payments</span><span class="v muted">From ${monthOnly(idxYm(ymIdx(ym) + 1))}</span></div>`
+        : `<div class="row"><span class="k">Budget for the month${s.every > 1 ? `<br><small>${rp(s.amount)} ÷ ${s.every} months</small>` : ''}</span><span class="v">${rp(s.monthly)}</span></div>
+           <div class="row"><span class="k">Recurring payments</span><span class="v">${s.recTotal ? '−' + rp(s.recTotal) : rp(0)}</span></div>`}
       <div class="row total"><span class="k">Final budget for the month</span><span class="v ${s.finalBudget < 0 ? 'neg-t' : ''}">${rp(s.finalBudget)}</span></div>
       <div class="row"><span class="k">Spent so far</span><span class="v">${rp(s.spentMonth)}</span></div>
       <div class="row"><span class="k">Left in the month</span><span class="v ${s.leftInMonth < 0 ? 'neg-t' : 'pos-t'}">${rp(s.leftInMonth)}</span></div>
@@ -429,7 +530,6 @@ function renderToday(){
       <div class="row"><span class="k">Recommended per day</span><span class="v">${rp(s.recommended)}</span></div>
     </div>
   </section>
-  ${s.overPlan ? `<div class="note warn"><span>${rp(s.daily)} a day adds up to ${rp(s.plannedTotal)} this month, which is ${rp(s.plannedTotal - s.finalBudget)} more than your final budget. Lower it to the recommended ${rp(s.recommended)} in Setup to stay inside.</span></div>` : ''}
   `;
   countUp($('#bigNum'), lastAvail, s.available);
   lastAvail = s.available;
@@ -482,25 +582,30 @@ function itemHtml(e){
 }
 
 function renderRecurring(){
-  const ym = todayStr().slice(0, 7);
+  const ym = todayStr().slice(0, 7), next = idxYm(ymIdx(ym) + 1);
   const s = summary(state, ym, 1);
   const items = state.recurring.slice().sort((a, b) => a.name.localeCompare(b.name));
-  view.innerHTML = storageNote() + `
+  const avg = sum(state.recurring.filter(r => r.active !== false).map(r => r.amount / r.every));
+  view.innerHTML = `
   <section class="card">
-    <h2>Recurring and subscriptions</h2>
-    <p class="muted small" style="margin:0 0 6px">Taken out of the month's budget on day 1 of every month they're due.</p>
+    <h2>Recurring payments</h2>
+    <p class="muted small" style="margin:0 0 6px">Monthly ones come out of your budget on the 1st. Longer ones are either spread out, with a bit set aside every month, or taken all at once in the month they're due.</p>
     <div class="rows">
-      <div class="row"><span class="k">Due in ${monthName(ym)}</span><span class="v">${rp(s.recTotal)}</span></div>
-      <div class="row"><span class="k">Average per month, all items</span><span class="v">${rp(sum(state.recurring.filter(r => r.active !== false).map(r => r.amount / r.every)))}</span></div>
+      <div class="row"><span class="k">Taken in ${monthName(ym)}</span><span class="v">${s.midStart ? '<span class="muted">Starts in ' + MONTHS[+next.slice(5, 7) - 1] + '</span>' : rp(s.recTotal)}</span></div>
+      <div class="row"><span class="k">Average per month</span><span class="v">${rp(avg)}</span></div>
     </div>
   </section>
   <section class="card">
     <div class="list">
       ${items.length ? items.map(r => {
-        const due = dueIn(r, ym);
+        const due = dueIn(r, ym) && !s.midStart;
+        const when = shortMonth(due ? ym : nextDueAfter(r, ym));
+        const detail = isSpread(r)
+          ? everyLabel(r.every) + ' · ' + rp(perMonth(r)) + '/month set aside · due ' + when
+          : everyLabel(r.every) + (r.day ? ' · on the ' + ord(r.day) : '') + ' · next ' + when;
         return `<div class="item"><div class="main">
           <div class="t">${esc(r.name)} ${r.active === false ? '<span class="pill warn">Paused</span>' : due ? '<span class="pill">Due this month</span>' : ''}</div>
-          <div class="s">${everyLabel(r.every)}${r.day ? ' · bills on day ' + r.day : ''} · next ${shortMonth(due ? ym : nextDueAfter(r, ym)) }${due ? '' : ''}</div>
+          <div class="s">${detail}</div>
         </div>
         <div class="amt">${rp(r.amount)}</div>
         <button type="button" class="x" data-act="edit-rec" data-id="${r.id}" aria-label="Edit ${esc(r.name)}">✎</button></div>`;
@@ -544,7 +649,7 @@ function renderHistory(){
     }
     rows = list.reverse().join('');
   }
-  view.innerHTML = storageNote() + `
+  view.innerHTML = `
   <section class="card">
     <div class="monthnav">
       <button type="button" data-act="hist-prev" aria-label="Previous month" ${ym <= minYm ? 'disabled' : ''}>‹</button>
@@ -564,31 +669,54 @@ function renderHistory(){
   </section>`;
 }
 
+const EVERY_PRESETS = [[1, 'Every month'], [3, 'Every 3 months'], [6, 'Every 6 months'], [12, 'Every year']];
+function everyChips(name, cur){
+  return `<div class="chips">${EVERY_PRESETS.map(([n, l]) => `<button type="button" class="chip" data-act="${name}" data-n="${n}" aria-pressed="${cur === n}">${l}</button>`).join('')}</div>`;
+}
+function perMonthText(amount, every){
+  if (!amount) return '';
+  return every === 1 ? 'That\'s ' + rp(amount) + ' a month.' : 'That\'s ' + rp(Math.floor(amount / every)) + ' a month, split over ' + every + ' months.';
+}
 function renderSetup(){
-  const ym = todayStr().slice(0, 7);
-  const s = summary(state, ym, 1);
-  view.innerHTML = storageNote() + `
-  <section class="card">
-    <h2>Budget from ${monthName(ym)} onward</h2>
-    <form class="form" id="setupForm">
-      <div class="field"><label for="fMonthly">Budget for the month</label>
-        <input class="inp num" id="fMonthly" inputmode="numeric" value="${nf.format(s.monthly)}" autocomplete="off">
-        <span class="hint">The most you allow yourself this month, before recurring payments.</span></div>
-      <div class="field"><label for="fDaily">Budget per day</label>
+  const t = todayStr(), ym = t.slice(0, 7), next = idxYm(ymIdx(ym) + 1);
+  const s = summary(state, ym, 1), cfg = settingsFor(state, ym), nextCfg = settingsFor(state, next);
+  const amount = cfg.amount != null ? cfg.amount : monthlyOf(cfg), every = cfg.every || 1;
+  const curM = MONTHS[+ym.slice(5, 7) - 1], nextM = MONTHS[+next.slice(5, 7) - 1];
+  const startDay = +state.start.slice(8, 10);
+  view.innerHTML = `
+  <form class="form" id="setupForm" style="gap:12px">
+  <section class="card form">
+    <h2 style="margin:0">Your budget</h2>
+    ${amountField('fAmt', 'How much you get', amount)}
+    <div class="field"><label>How often</label>
+      ${everyChips('set-every', every)}
+      <div class="two" style="align-items:center"><label for="fEvery" class="small muted">Or every N months</label><input class="inp num" id="fEvery" type="number" min="1" max="60" value="${every}"></div>
+      <span class="calc" id="fCalc">${perMonthText(amount, every)}</span>
+    </div>
+    ${s.midStart ? `
+      <div class="field"><label for="fDaily">Daily budget for the rest of ${curM}</label>
         <input class="inp num" id="fDaily" inputmode="numeric" value="${nf.format(s.daily)}" autocomplete="off">
-        <span class="hint" id="recHint">Recommended: ${rp(s.recommended)} (final budget ${rp(s.finalBudget)} ÷ ${s.days} days, rounded down to the thousand). <button type="button" class="btn ghost sm" data-act="use-rec" style="margin-top:6px">Use ${rp(s.recommended)}</button></span></div>
-      <div class="field"><label for="fStart">Start counting from</label>
-        <input class="inp" id="fStart" type="date" value="${state.start}">
-        <div class="chips">
-          <button type="button" class="chip" data-act="start-first" aria-pressed="${state.start === ym + '-01'}">1st of this month</button>
-          <button type="button" class="chip" data-act="start-today" aria-pressed="${state.start === todayStr()}">Today</button>
-        </div>
-        <span class="hint">Only matters for your first month: every month after starts on the 1st by itself. Pick the 1st if you'll add what you've spent since then, or Today if you're starting fresh.</span></div>
-      <button class="btn block" type="submit">Save</button>
-    </form>
-    <p class="muted small" style="margin:10px 0 0">Past months keep the numbers they had. You can type amounts like 15k, 15rb or 1.5jt.</p>
+        <span class="hint">Recommended: ${rp(s.recommended)} (${rp(s.finalBudget)} left ÷ ${s.trackDays} days).</span></div>
+      <div class="field"><label for="fDailyNext">Daily budget from ${nextM} 1st</label>
+        <input class="inp num" id="fDailyNext" inputmode="numeric" value="${nf.format(nextCfg.daily)}" autocomplete="off">
+        <span class="hint" id="fRecHint"></span></div>` : `
+      <div class="field"><label for="fDaily">Daily budget</label>
+        <input class="inp num" id="fDaily" inputmode="numeric" value="${nf.format(s.daily)}" autocomplete="off">
+        <span class="hint" id="fRecHint"></span></div>`}
   </section>
-  <section class="card">
+  <section class="card form">
+    <h2 style="margin:0">Your first month</h2>
+    <div class="field"><label for="fStart">Started on</label>
+      <input class="inp" id="fStart" type="date" value="${state.start}"></div>
+    <div class="field" id="fLeftWrap" ${startDay > 1 ? '' : 'hidden'}>
+      ${amountField('fLeft', 'Left for that month when you started', state.startLeft || 0)}
+      <span class="hint">That amount is your whole budget until the month ends. Leave it empty to use your normal budget instead.</span>
+    </div>
+  </section>
+  <button class="btn block" type="submit">Save</button>
+  <button type="button" class="btn ghost block" data-act="redo-setup">Go through the setup again</button>
+  </form>
+  <section class="card" style="margin-top:12px">
     <h2>Your data</h2>
     <p class="muted small" style="margin:0 0 12px">Everything stays in this browser on this phone. Nothing is sent anywhere, so keep a backup in your notes now and then.</p>
     <div class="btnrow">
@@ -597,27 +725,59 @@ function renderSetup(){
       <button type="button" class="btn ghost sm" data-act="erase" style="color:var(--debt-ink)">Erase everything</button>
     </div>
   </section>`;
-  const f = $('#setupForm');
-  $('#fStart').addEventListener('input', e => {
-    const v = e.target.value;
-    document.querySelector('[data-act="start-first"]').setAttribute('aria-pressed', String(v === ym + '-01'));
-    document.querySelector('[data-act="start-today"]').setAttribute('aria-pressed', String(v === todayStr()));
-  });
-  f.addEventListener('submit', e => {
+  wireAmount('fAmt'); wireAmount('fLeft');
+  const fEvery = $('#fEvery');
+  // Recommended daily budget for a full month, from what's typed right now.
+  const updateRec = () => {
+    const a = parseAmount($('#fAmt').value), e = Math.max(1, Math.min(60, parseInt(fEvery.value, 10) || 1));
+    $('#fCalc').textContent = perMonthText(a, e);
+    document.querySelectorAll('[data-act="set-every"]').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.n === e)));
+    const target = s.midStart ? next : ym;
+    const tmp = { ...state, months: { [target]: { amount: a, every: e, daily: 0 } }, start: s.midStart ? state.start : ym + '-01', startLeft: s.midStart ? state.startLeft : null };
+    const r = summary(tmp, target, 1);
+    const hint = $('#fRecHint');
+    if (hint) hint.innerHTML = 'Recommended: ' + rp(r.recommended) + ' (' + rp(r.monthly) + ' − ' + rp(r.recTotal) + ' recurring ÷ ' + r.days + ' days). '
+      + `<button type="button" class="btn ghost sm" data-act="use-rec" data-v="${r.recommended}" style="margin-top:6px">Use ${rp(r.recommended)}</button>`;
+  };
+  $('#fAmt').addEventListener('input', updateRec);
+  fEvery.addEventListener('input', updateRec);
+  setupUpdateRec = updateRec;
+  updateRec();
+  $('#fStart').addEventListener('input', e => { $('#fLeftWrap').hidden = !(+String(e.target.value).slice(8, 10) > 1); });
+  $('#setupForm').addEventListener('submit', e => {
     e.preventDefault();
-    const monthly = parseAmount($('#fMonthly').value), daily = parseAmount($('#fDaily').value);
-    state.months[ym] = { monthly, daily };
-    const st = $('#fStart').value; if (/^\d{4}-\d{2}-\d{2}$/.test(st)) state.start = st;
+    const amt = parseAmount($('#fAmt').value), ev = Math.max(1, Math.min(60, parseInt(fEvery.value, 10) || 1));
+    const daily = parseAmount($('#fDaily').value);
+    const wasMid = s.midStart, dailyNext = wasMid ? parseAmount($('#fDailyNext').value) : null;
+    for (const k of Object.keys(state.months)) if (k > ym) delete state.months[k];
+    state.months[ym] = { amount: amt, every: ev, daily };
+    if (wasMid) state.months[next] = { amount: amt, every: ev, daily: dailyNext };
+    const st = $('#fStart').value;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(st)) state.start = st;
+    state.startLeft = (+state.start.slice(8, 10) > 1 && $('#fLeft').value.trim() !== '') ? parseAmount($('#fLeft').value) : null;
     state.example = false; save(); toast('Saved'); render();
   });
 }
+let setupUpdateRec = null;
 
 /* ---------- sheets ---------- */
 const sheetBg = $('#sheetBg'), sheet = $('#sheet');
-function openSheet(html, onOpen){ sheet.innerHTML = '<div class="grip"></div>' + html; sheetBg.classList.add('open'); onOpen && onOpen(); }
-function closeSheet(){ sheetBg.classList.remove('open'); sheet.innerHTML = ''; }
+let sheetToken = 0;
+function openSheet(html, onOpen){
+  sheetToken++; sheetBg.classList.remove('closing');
+  sheet.innerHTML = '<div class="grip"></div>' + html; sheetBg.classList.add('open'); onOpen && onOpen();
+}
+// Slide the sheet down and fade the backdrop before removing it.
+function closeSheet(){
+  if (!sheetBg.classList.contains('open') || sheetBg.classList.contains('closing')) return;
+  const my = ++sheetToken;
+  const done = () => { if (my !== sheetToken) return; sheetBg.classList.remove('open', 'closing'); sheet.innerHTML = ''; };
+  if (reduceMotion()) return done();
+  sheetBg.classList.add('closing');
+  setTimeout(done, 220);
+}
 sheetBg.addEventListener('click', e => { if (e.target === sheetBg) closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (panelOpen()) closePanel(); else closeSheet(); });
 
 function amountField(id, label, val){
   return `<div class="field"><label for="${id}">${label}</label>
@@ -626,7 +786,7 @@ function amountField(id, label, val){
 }
 function wireAmount(id){
   const i = $('#' + id), p = $('#' + id + 'P');
-  i.addEventListener('input', () => { const v = parseAmount(i.value); p.textContent = v ? rp(v) : 'Type 10000, 10k or 10rb'; });
+  i.addEventListener('input', () => { const v = parseAmount(i.value); p.classList.remove('err'); p.textContent = v ? rp(v) : 'Type 10000, 10k or 10rb'; });
 }
 
 function openAddSpend(date){
@@ -657,33 +817,59 @@ function openAddSpend(date){
   });
 }
 
-function openRec(id){
+// Common payments for the quick picks. No prices: they differ per plan and change over time.
+const REC_PRESETS = [
+  { name: 'Kos rent', every: 1 }, { name: 'Phone credit', every: 1 }, { name: 'Home internet', every: 1 },
+  { name: 'Spotify', every: 1 }, { name: 'Netflix', every: 1 }, { name: 'YouTube Premium', every: 1 },
+  { name: 'Cloud storage', every: 1 }, { name: 'Gym', every: 1 }, { name: 'Tuition (UKT)', every: 6 }
+];
+const unusedPresets = () => REC_PRESETS.map((p, i) => ({ ...p, i })).filter(p => !state.recurring.some(r => r.name.trim().toLowerCase() === p.name.toLowerCase()));
+function presetChips(act){
+  const list = unusedPresets();
+  return list.length ? `<div class="chips">${list.map(p => `<button type="button" class="chip" data-act="${act}" data-i="${p.i}">+ ${p.name}</button>`).join('')}</div>` : '';
+}
+function openRec(id, preset){
   const r = id ? state.recurring.find(x => x.id === id) : null;
   const ym = todayStr().slice(0, 7);
-  const every = r ? r.every : 1;
+  const every = r ? r.every : (preset && preset.every) || 1;
   const presets = [[1, 'Monthly'], [2, '2 months'], [3, '3 months'], [6, '6 months'], [12, 'Yearly']];
   openSheet(`<h3 id="sheetTitle">${r ? 'Edit' : 'Add'} recurring payment</h3>
   <form class="form" id="recForm">
-    <div class="field"><label for="rName">Name</label><input class="inp" id="rName" value="${r ? esc(r.name) : ''}" placeholder="Claude, Spotify, kos rent…" maxlength="40" autocomplete="off" required></div>
+    ${!r && !preset && unusedPresets().length ? `<div class="field"><label>Quick pick</label>${presetChips('rec-preset')}</div>` : ''}
+    <div class="field"><label for="rName">Name</label><input class="inp" id="rName" value="${r ? esc(r.name) : preset ? esc(preset.name) : ''}" placeholder="Claude, Spotify, kos rent…" maxlength="40" autocomplete="off" required></div>
     ${amountField('rAmt', 'Amount each time', r ? r.amount : 0)}
     <div class="field"><label>How often</label>
       <div class="chips" id="rEveryChips">${presets.map(([n, l]) => `<button type="button" class="chip" data-every="${n}" aria-pressed="${n === every}">${l}</button>`).join('')}</div>
       <div class="two" style="align-items:center"><label for="rEvery" class="small muted">Or every N months</label><input class="inp num" id="rEvery" type="number" min="1" max="60" value="${every}"></div>
     </div>
+    <label class="switch" id="rSpreadRow" ${every > 1 ? '' : 'hidden'}>
+      <input type="checkbox" id="rSpread" ${!r || r.spread !== false ? 'checked' : ''}>
+      <span><b>Spread it out</b><br><span class="muted small" id="rSpreadHint"></span></span>
+    </label>
     <div class="two">
       <div class="field"><label for="rStart">First month</label><input class="inp" id="rStart" type="month" value="${r ? r.start : ym}"></div>
       <div class="field"><label for="rDay">Bills on day</label><input class="inp num" id="rDay" type="number" min="1" max="31" value="${r && r.day ? r.day : 1}"></div>
     </div>
-    <span class="hint muted small">It's always taken from the budget on day 1 of a due month, whichever day it actually bills.</span>
+    <span class="hint muted small" id="rWhenHint"></span>
     ${r ? `<label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="rActive" ${r.active === false ? '' : 'checked'}> Active</label>` : ''}
     <div class="two"><button type="button" class="btn ghost" data-act="close">Cancel</button><button class="btn" type="submit">Save</button></div>
     ${r ? `<button type="button" class="btn ghost block" style="color:var(--debt-ink)" data-act="del-rec" data-id="${r.id}">Delete this payment</button>` : ''}
   </form>`, () => {
     wireAmount('rAmt');
+    if (preset) setTimeout(() => $('#rAmt').focus(), 60);
     const ev = $('#rEvery');
-    const sync = () => sheet.querySelectorAll('[data-every]').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.every === +ev.value)));
+    const sync = () => {
+      sheet.querySelectorAll('[data-every]').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.every === +ev.value)));
+      const n = Math.max(1, parseInt(ev.value, 10) || 1), amt = parseAmount($('#rAmt').value), spread = $('#rSpread').checked;
+      $('#rSpreadRow').hidden = n === 1;
+      $('#rSpreadHint').textContent = amt ? 'Set aside ' + rp(Math.ceil(amt / n)) + ' every month instead of taking ' + rp(amt) + ' at once.' : 'Set aside a bit every month instead of taking it all at once.';
+      $('#rWhenHint').textContent = n > 1 && spread ? 'A share comes out of your budget on the 1st of every month, so it\'s covered by the time it\'s due.' : 'Taken from your budget on the 1st of the month it\'s due, whichever day it actually bills.';
+    };
     sheet.querySelectorAll('[data-every]').forEach(c => c.addEventListener('click', () => { ev.value = c.dataset.every; sync(); }));
     ev.addEventListener('input', sync);
+    $('#rAmt').addEventListener('input', sync);
+    $('#rSpread').addEventListener('change', sync);
+    sync();
     $('#recForm').addEventListener('submit', e => {
       e.preventDefault();
       const amount = parseAmount($('#rAmt').value);
@@ -692,9 +878,9 @@ function openRec(id){
       if (!amount){ $('#rAmt').focus(); $('#rAmtP').textContent = 'Enter an amount above zero'; return; }
       const obj = { name, amount, every: Math.max(1, Math.min(60, parseInt(ev.value, 10) || 1)),
         start: $('#rStart').value || ym, day: Math.max(1, Math.min(31, parseInt($('#rDay').value, 10) || 1)),
-        active: r ? $('#rActive').checked : true };
+        active: r ? $('#rActive').checked : true, spread: $('#rSpread').checked };
       if (r) Object.assign(r, obj); else state.recurring.push({ id: uid(), ...obj });
-      state.example = false; save(); closeSheet(); render();
+      state.example = false; save(); closeSheet(); render(); renderOnboard();
     });
   });
 }
@@ -714,7 +900,8 @@ function openImport(){
       try {
         const o = JSON.parse($('#impText').value);
         if (!o || typeof o.months !== 'object' || !Array.isArray(o.spend) || !Array.isArray(o.recurring) || !o.start) throw 0;
-        state = o; state.example = false; save(); closeSheet(); tab = 'today'; render(); toast('Backup restored');
+        state = o; state.example = false; state.setupDone = true; if (!state.seen) state.seen = [];
+        save(); closeSheet(); if (ob) closeOnboard(); tab = 'today'; enterNext = true; spinNext = true; render(); toast('Backup restored');
       } catch (err){ $('#impErr').textContent = 'That doesn\'t look like a Jatah backup. Copy the whole text from "Copy backup", including the curly braces.'; }
     });
   });
@@ -735,20 +922,214 @@ function openBackup(text){
 
 /* ---------- toast ---------- */
 let toastTimer = null, undoFn = null;
-function toast(msg, undo){
-  $('#toastMsg').textContent = msg; undoFn = undo || null;
-  $('#toastBtn').style.display = undo ? '' : 'none';
+function toast(msg, action, label){
+  $('#toastMsg').textContent = msg; undoFn = action || null;
+  $('#toastBtn').style.display = action ? '' : 'none';
+  $('#toastBtn').textContent = label || 'Undo';
   const el = $('#toast');
   if (el.classList.contains('show')){ el.classList.remove('show'); void el.offsetWidth; }
   el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), undo ? 5000 : 1800);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), action ? 5000 : 1800);
 }
 $('#toastBtn').addEventListener('click', () => { if (undoFn) undoFn(); $('#toast').classList.remove('show'); });
 
+/* ---------- notifications ---------- */
+const ord = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'));
+const monthOnly = ym => MONTHS[+ym.slice(5, 7) - 1];
+function getNotes(){
+  const t = todayStr(), ym = t.slice(0, 7), day = +t.slice(8, 10), next = idxYm(ymIdx(ym) + 1);
+  const s = summary(state, ym, day);
+  const spentToday = sum(state.spend.filter(e => e.date === t).map(e => e.amount));
+  const pot = s.available + spentToday;
+  const st = s.accDays ? moneyState(s.available, s.daily, pot) : 'safe';
+  const out = [];
+  if (!storageOK) out.push({ id: 'storage', kind: 'debt', t: 'Your entries aren\'t being saved', b: 'This browser is blocking storage, so everything disappears when you close it. Open the app in your phone\'s browser or install it instead.' });
+  if (st === 'debt') out.push({ id: 'debt-' + t, kind: 'debt', t: 'You\'re ' + rp(-s.available) + ' over', b: 'Tomorrow\'s ' + rp(s.daily) + ' pays it back first, leaving ' + rp(s.available + s.daily) + '.' });
+  else if (st === 'danger') out.push({ id: 'low-' + t, kind: 'danger', t: 'Running low today', b: rp(s.available) + ' left of today\'s ' + rp(pot) + '.' });
+  if (s.overPlan && s.daily > 0) out.push({ id: 'plan-' + ym + '-' + s.daily + '-' + s.finalBudget, kind: 'danger', t: 'Your daily budget is too high',
+    b: rp(s.daily) + ' a day adds up to ' + rp(s.plannedTotal) + ' this month, ' + rp(s.plannedTotal - s.finalBudget) + ' more than you have. The recommended amount is ' + rp(s.recommended) + '.',
+    action: { label: 'Change it', act: 'go-setup' } });
+  // This month's recurring payments, as one note.
+  if (!s.midStart && s.recs.length){
+    const parts = s.recs.map(x => esc(x.r.name) + ' ' + rp(x.charge) + (isSpread(x.r) ? ' (set aside)' : ''));
+    out.push({ id: 'month-' + ym + '-' + s.recTotal, kind: 'info', t: rp(s.recTotal) + ' in recurring payments for ' + monthOnly(ym),
+      b: 'Taken from your budget on the 1st: ' + parts.join(', ') + '.' });
+  }
+  // Longer payments: due this month, or coming up next month.
+  for (const r of state.recurring){
+    if (r.active === false || r.every === 1) continue;
+    if (dueIn(r, ym)) out.push({ id: 'due-' + r.id + '-' + ym, kind: 'info', t: esc(r.name) + ' is due this month',
+      b: isSpread(r)
+        ? rp(r.amount) + (r.day > 1 ? ', billed on the ' + ord(r.day) : '') + '. You\'ve been setting aside ' + rp(perMonth(r)) + ' a month for it.'
+        : rp(r.amount) + ' came out of this month\'s budget on the 1st' + (r.day > 1 ? ' (it bills on the ' + ord(r.day) + ')' : '') + '.' });
+    else if (dueIn(r, next)) out.push({ id: 'soon-' + r.id + '-' + next, kind: 'info', t: esc(r.name) + ' is due next month',
+      b: rp(r.amount) + ' in ' + monthOnly(next) + '. ' + (isSpread(r) ? 'It\'s covered by what you\'ve set aside.' : 'It will come out of ' + monthOnly(next) + '\'s budget on the 1st.') });
+  }
+  // Backup reminder every two weeks once there's something worth keeping.
+  const dayNo = Math.floor(new Date(t + 'T00:00:00').getTime() / 864e5);
+  const lastNo = state.lastBackup ? Math.floor(new Date(state.lastBackup + 'T00:00:00').getTime() / 864e5) : null;
+  if (state.spend.length >= 5 && (lastNo === null || dayNo - lastNo >= 14)) out.push({ id: 'backup-' + Math.floor(dayNo / 14), kind: 'info', t: 'Time for a backup',
+    b: lastNo === null ? 'You haven\'t made one yet. If this phone loses its data, a backup is the only way to get it back.' : 'Your last one was ' + (dayNo - lastNo) + ' days ago.',
+    action: { label: 'Copy backup', act: 'copy-backup' } });
+  return out;
+}
+function unseenNotes(){ const seen = new Set(state.seen || []); return getNotes().filter(n => !seen.has(n.id)); }
+const bellBtn = $('#bellBtn'), notePanel = $('#notePanel');
+let lastBadge = 0;
+function updateBell(){
+  const n = unseenNotes().length, badge = $('#bellBadge');
+  badge.hidden = n === 0; badge.textContent = n > 9 ? '9+' : String(n);
+  bellBtn.setAttribute('aria-label', n ? 'Notifications, ' + n + ' new' : 'Notifications');
+  if (n > lastBadge && !reduceMotion()){ bellBtn.classList.remove('ring'); void bellBtn.offsetWidth; bellBtn.classList.add('ring'); }
+  lastBadge = n;
+}
+function openPanel(){
+  clearTimeout(toastTimer); $('#toast').classList.remove('show');
+  const notes = getNotes(), seen = new Set(state.seen || []);
+  notePanel.innerHTML = `<div class="np-head"><b>Notifications</b><button type="button" class="x" data-act="close-panel" aria-label="Close notifications">✕</button></div>
+    <div class="np-list">${notes.length ? notes.map(n => `<div class="np-item ${n.kind} ${seen.has(n.id) ? '' : 'unseen'}"><span class="dot"></span><div>
+      <div class="tt">${n.t}</div><div class="bb">${n.b}</div>
+      ${n.action ? `<button type="button" class="btn ghost sm" data-act="${n.action.act}" data-from-panel="1">${n.action.label}</button>` : ''}
+    </div></div>`).join('') : '<div class="np-empty">You\'re all caught up.</div>'}</div>`;
+  notePanel.classList.add('open'); bellBtn.setAttribute('aria-expanded', 'true');
+  // Opening the panel counts as reading them. Keep the list from growing forever.
+  const ids = new Set(notes.map(n => n.id));
+  state.seen = [...new Set([...(state.seen || []).filter(id => ids.has(id)), ...ids])];
+  save(); lastBadge = 0; updateBell();
+}
+function closePanel(){ notePanel.classList.remove('open'); bellBtn.setAttribute('aria-expanded', 'false'); }
+const panelOpen = () => notePanel.classList.contains('open');
+
+/* ---------- first-time setup ---------- */
+const obEl = $('#onboard');
+let ob = null;
+const OB_MARK = `<svg viewBox="0 0 120 120" class="ob-mark" aria-hidden="true">
+  <circle cx="60" cy="60" r="46" fill="none" stroke="var(--accent-soft)" stroke-width="14"/>
+  <circle class="ob-arc" cx="60" cy="60" r="46" fill="none" stroke="var(--accent)" stroke-width="14" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+  <text x="56" y="76" text-anchor="middle" font-family="Bricolage Grotesque, Segoe UI, sans-serif" font-weight="800" font-size="46" fill="var(--ink)">J</text>
+  <circle cx="77" cy="72" r="6" fill="var(--safe)"/></svg>`;
+function obCtx(){
+  const t = todayStr(), ym = t.slice(0, 7), day = +t.slice(8, 10), next = idxYm(ymIdx(ym) + 1);
+  // The start question only makes sense in your first month. Going through setup again later keeps your history as it is.
+  const firstMonth = !state.setupDone || state.start.slice(0, 7) === ym;
+  const askStart = firstMonth && day > 1;
+  const midd = askStart && ob.mode === 'today';
+  return { t, ym, day, next, firstMonth, askStart, midd, curM: monthOnly(ym), nextM: monthOnly(next) };
+}
+function obSteps(){ return obCtx().askStart ? ['welcome', 'budget', 'recurring', 'start', 'daily'] : ['welcome', 'budget', 'recurring', 'daily']; }
+function obTemp(c){
+  return { ...state, start: c.midd ? c.t : (c.firstMonth ? c.ym + '-01' : state.start), startLeft: c.midd ? (ob.left || 0) : null,
+    months: { [c.ym]: { amount: ob.amount, every: ob.every, daily: 0 } } };
+}
+function openOnboard(){
+  const t = todayStr(), ym = t.slice(0, 7), day = +t.slice(8, 10), cfg = settingsFor(state, ym);
+  const again = !!state.setupDone;
+  ob = { i: again ? 1 : 0, dir: 1, amount: again ? (cfg.amount != null ? cfg.amount : monthlyOf(cfg)) : 0, every: cfg.every || 1,
+    mode: day > 1 && (!again || state.startLeft != null) ? 'today' : 'first', left: state.startLeft, dailyNow: null, dailyNext: null };
+  closePanel();
+  obEl.classList.remove('leaving'); obEl.classList.add('open');
+  renderOnboard();
+}
+function closeOnboard(){
+  ob = null;
+  if (reduceMotion()){ obEl.classList.remove('open'); obEl.innerHTML = ''; return; }
+  obEl.classList.add('leaving');
+  setTimeout(() => { if (!ob){ obEl.classList.remove('open', 'leaving'); obEl.innerHTML = ''; } }, 250);
+}
+function renderOnboard(){
+  if (!ob) return;
+  const steps = obSteps(); ob.i = Math.min(ob.i, steps.length - 1);
+  const key = steps[ob.i], c = obCtx();
+  let title = '', lead = '', body = '', foot = '';
+  if (key === 'welcome'){
+    title = 'Jatah.';
+    lead = 'Your money as a daily allowance. Spend less today and the rest carries over. Spend more and tomorrow pays it back.';
+    body = OB_MARK.replace('class="ob-mark"', 'class="ob-mark" style="order:-1"') + `<ul class="ob-points"><li>Takes about a minute to set up</li><li>No account, no bank link</li><li>Everything stays on this phone</li></ul>`;
+    foot = `<button type="button" class="btn block" data-act="ob-next">Get started</button>
+      <button type="button" class="btn ghost block" data-act="import">I have a backup</button>`;
+  } else if (key === 'budget'){
+    title = 'How much do you get?';
+    lead = 'Your allowance, salary, or whatever you live on. If it comes per semester or per year, pick that and it\'s split into months.';
+    body = amountField('obAmt', 'Amount', ob.amount) + `<div class="field"><label>How often do you get it?</label>${everyChips('ob-every', ob.every)}
+      <div class="two" style="align-items:center"><label for="obEvery" class="small muted">Or every N months</label><input class="inp num" id="obEvery" type="number" min="1" max="60" value="${ob.every}"></div></div>
+      <div class="calc" id="obCalc">${perMonthText(ob.amount, ob.every)}</div>`;
+    foot = `<button type="button" class="btn block" data-act="ob-next">Next</button>`;
+  } else if (key === 'recurring'){
+    title = 'Anything you pay regularly?';
+    lead = 'Subscriptions, rent, phone credit, yearly fees. They come out of your budget before your daily allowance. You can always add more later.';
+    const items = state.recurring;
+    body = `<div class="card" style="padding:4px 14px"><div class="list">${items.length ? items.map(r => `<div class="item"><div class="main"><div class="t">${esc(r.name)}</div>
+      <div class="s">${everyLabel(r.every)}${isSpread(r) ? ' · ' + rp(perMonth(r)) + '/month set aside' : ''}</div></div>
+      <div class="amt">${rp(r.amount)}</div><button type="button" class="x" data-act="edit-rec" data-id="${r.id}" aria-label="Edit ${esc(r.name)}">✎</button></div>`).join('')
+      : '<div class="empty" style="padding:12px 0">Nothing added yet.</div>'}</div></div>
+      <button type="button" class="btn ghost block" data-act="add-rec">+ Add a payment</button>
+      ${unusedPresets().length ? `<div class="field"><label class="small muted">Or tap a common one</label>${presetChips('ob-preset')}</div>` : ''}`;
+    foot = `<button type="button" class="btn block" data-act="ob-next">${items.length ? 'Next' : 'Skip for now'}</button>`;
+  } else if (key === 'start'){
+    title = 'Starting mid-month?';
+    lead = 'It\'s the ' + ord(c.day) + ', so ' + c.curM + ' is already underway.';
+    body = `<div class="choice">
+      <button type="button" class="opt" data-act="ob-mode" data-mode="today" aria-pressed="${ob.mode === 'today'}"><b>Start from today</b><span>Tell Jatah. how much you have left for ${c.curM}.</span></button>
+      <button type="button" class="opt" data-act="ob-mode" data-mode="first" aria-pressed="${ob.mode === 'first'}"><b>Start from ${c.curM} 1st</b><span>Use your full budget, and add what you've spent since the 1st.</span></button></div>
+      ${ob.mode === 'today' ? amountField('obLeft', 'How much is left for ' + c.curM + '?', ob.left) + `<p class="hint muted small" style="margin:-6px 0 0">Only what you can still spend this month. Recurring payments start in ${c.nextM}, and your normal budget takes over on ${c.nextM} 1st.</p>` : ''}`;
+    foot = `<button type="button" class="btn block" data-act="ob-next">Next</button>`;
+  } else if (key === 'daily'){
+    const tmp = obTemp(c), sNow = summary(tmp, c.ym, c.day), sNext = summary(tmp, c.next, 1);
+    if (ob.dailyNow == null) ob.dailyNow = sNow.recommended;
+    if (ob.dailyNext == null) ob.dailyNext = sNext.recommended;
+    title = 'Your daily budget';
+    lead = 'What you get each day. Whatever you don\'t spend carries over to tomorrow. We filled in what fits your budget.';
+    const tooMuch = f => f.finalBudget <= 0 ? '<p class="hint small err" style="margin:-6px 0 0">Your recurring payments are more than your budget this month.</p>' : '';
+    body = c.midd
+      ? amountField('obDailyNow', 'For the rest of ' + c.curM, ob.dailyNow) + `<p class="hint muted small" style="margin:-6px 0 0">${rp(sNow.finalBudget)} left ÷ ${sNow.trackDays} days, rounded down.</p>`
+        + amountField('obDailyNext', 'From ' + c.nextM + ' 1st', ob.dailyNext) + `<p class="hint muted small" style="margin:-6px 0 0">${rp(sNext.monthly)} − ${rp(sNext.recTotal)} recurring, ÷ ${sNext.days} days, rounded down.</p>` + tooMuch(sNext)
+      : amountField('obDailyNow', 'Per day', ob.dailyNow) + `<p class="hint muted small" style="margin:-6px 0 0">${rp(sNow.monthly)} − ${rp(sNow.recTotal)} recurring, ÷ ${sNow.days} days, rounded down.</p>` + tooMuch(sNow);
+    foot = `<button type="button" class="btn block" data-act="ob-finish">Start using Jatah.</button>`;
+  }
+  obEl.innerHTML = `<div class="ob">
+    <div class="ob-top">${ob.i > 0 ? '<button type="button" class="back" data-act="ob-back">‹ Back</button>' : '<span></span>'}
+      <div class="ob-dots" role="img" aria-label="Step ${ob.i + 1} of ${steps.length}">${steps.map((_, j) => `<i class="${j === ob.i ? 'on' : ''}"></i>`).join('')}</div></div>
+    <div class="ob-body ${ob.dir > 0 ? 'fwd' : ob.dir < 0 ? 'bwd' : ''}"><h1 id="obTitle">${title}</h1><p class="lead">${lead}</p>${body}</div>
+    <div class="ob-foot">${foot}</div></div>`;
+  obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-modal', 'true'); obEl.setAttribute('aria-labelledby', 'obTitle');
+  ob.dir = 0;
+  // Keep what's typed in `ob` as it changes.
+  const bind = (id, k, reset) => { const el = $('#' + id); if (!el) return; wireAmount(id); el.addEventListener('input', () => { ob[k] = el.value.trim() === '' ? null : parseAmount(el.value); if (reset) { ob.dailyNow = ob.dailyNext = null; } if (k === 'amount') $('#obCalc').textContent = perMonthText(ob.amount, ob.every); }); };
+  bind('obAmt', 'amount', true); bind('obLeft', 'left', true); bind('obDailyNow', 'dailyNow'); bind('obDailyNext', 'dailyNext');
+  const ev = $('#obEvery');
+  if (ev) ev.addEventListener('input', () => { ob.every = Math.max(1, Math.min(60, parseInt(ev.value, 10) || 1)); ob.dailyNow = ob.dailyNext = null; syncObEvery(); });
+  obEl.scrollTop = 0;
+}
+function syncObEvery(){
+  document.querySelectorAll('[data-act="ob-every"]').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.n === ob.every)));
+  const calc = $('#obCalc'); if (calc) calc.textContent = perMonthText(ob.amount, ob.every);
+}
+function obNext(){
+  const key = obSteps()[ob.i];
+  if (key === 'budget' && !ob.amount){ const p = $('#obAmtP'); p.textContent = 'Enter how much you get'; p.classList.add('err'); $('#obAmt').focus(); return; }
+  if (key === 'start' && ob.mode === 'today' && ob.left == null){ const p = $('#obLeftP'); p.textContent = 'Enter how much you have left, even if it\'s 0'; p.classList.add('err'); $('#obLeft').focus(); return; }
+  ob.i++; ob.dir = 1; renderOnboard();
+}
+function obFinish(){
+  const c = obCtx();
+  if (c.firstMonth){ state.start = c.midd ? c.t : c.ym + '-01'; state.startLeft = c.midd ? (ob.left || 0) : null; }
+  for (const k of Object.keys(state.months)) if (k >= c.ym) delete state.months[k];
+  state.months[c.ym] = { amount: ob.amount || 0, every: ob.every, daily: ob.dailyNow || 0 };
+  if (c.midd) state.months[c.next] = { amount: ob.amount || 0, every: ob.every, daily: ob.dailyNext || 0 };
+  const again = state.setupDone;
+  state.setupDone = true; state.example = false; save();
+  closeOnboard();
+  tab = 'today'; state.tab = tab; enterNext = true; spinNext = true; lastAvail = 0; lastRing = 0; render();
+  toast(again ? 'Budget updated' : 'All set. Happy budgeting!');
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click', async e => {
+  if (panelOpen() && !e.target.closest('#notePanel, #bellBtn')) closePanel();
+  if (e.target.closest('#bellBtn')){ panelOpen() ? closePanel() : openPanel(); return; }
   const b = e.target.closest('[data-act],[data-tab]');
   if (!b) return;
+  if (b.dataset.fromPanel) closePanel();
   if (b.dataset.tab){ if (b.dataset.tab !== tab){ enterNext = true; spinNext = true; } tab = b.dataset.tab; state.tab = tab; save(); openDay = null; window.scrollTo(0, 0); render(); return; }
   const act = b.dataset.act, id = b.dataset.id;
   switch (act){
@@ -761,33 +1142,46 @@ document.addEventListener('click', async e => {
       break;
     }
     case 'add-rec': openRec(); break;
+    case 'ob-preset': openRec(null, REC_PRESETS[+b.dataset.i]); break;
+    case 'rec-preset': {
+      // Fill the open sheet, then move on to the amount.
+      const pr = REC_PRESETS[+b.dataset.i];
+      $('#rName').value = pr.name;
+      const ev = $('#rEvery'); ev.value = pr.every; ev.dispatchEvent(new Event('input'));
+      b.parentElement.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === b)));
+      $('#rAmt').focus();
+      break;
+    }
     case 'edit-rec': openRec(id); break;
     case 'del-rec': {
       const i = state.recurring.findIndex(x => x.id === id); if (i < 0) break;
-      const [gone] = state.recurring.splice(i, 1); save(); closeSheet(); render();
-      toast('Deleted ' + gone.name, () => { state.recurring.push(gone); save(); render(); });
+      const [gone] = state.recurring.splice(i, 1); save(); closeSheet(); render(); renderOnboard();
+      toast('Deleted ' + gone.name, () => { state.recurring.push(gone); save(); render(); renderOnboard(); });
       break;
     }
     case 'hist-prev': enterNext = true; histYm = idxYm(ymIdx(histYm) - 1); openDay = null; render(); break;
     case 'hist-next': enterNext = true; histYm = idxYm(ymIdx(histYm) + 1); openDay = null; render(); break;
     case 'toggle-day': openDay = openDay === b.dataset.day ? null : b.dataset.day; render(); break;
     case 'add-on': openAddSpend(b.dataset.day); break;
-    case 'use-rec': { const s = summary(state, todayStr().slice(0, 7), 1); $('#fDaily').value = nf.format(s.recommended); break; }
+    case 'use-rec': { const f = $('#fDailyNext') || $('#fDaily'); f.value = nf.format(+b.dataset.v); break; }
+    case 'set-every': $('#fEvery').value = b.dataset.n; setupUpdateRec && setupUpdateRec(); break;
+    case 'redo-setup': openOnboard(); break;
+    case 'go-setup': enterNext = true; tab = 'setup'; state.tab = tab; save(); window.scrollTo(0, 0); render(); break;
+    case 'close-panel': closePanel(); break;
+    case 'ob-next': obNext(); break;
+    case 'ob-back': ob.i = Math.max(0, ob.i - 1); ob.dir = -1; renderOnboard(); break;
+    case 'ob-every': ob.every = +b.dataset.n; $('#obEvery').value = ob.every; ob.dailyNow = ob.dailyNext = null; syncObEvery(); break;
+    case 'ob-mode': ob.mode = b.dataset.mode; ob.dailyNow = ob.dailyNext = null; renderOnboard(); if (ob.mode === 'today') setTimeout(() => { const l = $('#obLeft'); l && l.focus(); }, 50); break;
+    case 'ob-finish': obFinish(); break;
     case 'copy-backup': {
       const text = JSON.stringify(state);
-      try { await navigator.clipboard.writeText(text); toast('Backup copied. Paste it into your notes.'); }
+      try { await navigator.clipboard.writeText(text); state.lastBackup = todayStr(); save(); updateBell(); toast('Backup copied. Paste it into your notes.'); }
       catch (err){ openBackup(text); }
-      break;
-    }
-    case 'start-first': case 'start-today': {
-      const v = act === 'start-first' ? todayStr().slice(0, 7) + '-01' : todayStr();
-      $('#fStart').value = v;
-      document.querySelectorAll('[data-act^="start-"]').forEach(c => c.setAttribute('aria-pressed', String(c === b)));
       break;
     }
     case 'import': openImport(); break;
     case 'erase': openErase(); break;
-    case 'erase-yes': state = seed(); state.example = false; save(); closeSheet(); tab = 'today'; render(); toast('Everything erased'); break;
+    case 'erase-yes': state = seed(); save(); closeSheet(); tab = 'today'; render(); openOnboard(); break;
   }
 });
 $('#addBtn').addEventListener('click', () => openAddSpend(tab === 'history' && openDay ? openDay : null));
@@ -797,6 +1191,9 @@ try {
   const capApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
   if (capApp) capApp.addListener('backButton', () => {
     if (sheetBg.classList.contains('open')) closeSheet();
+    else if (panelOpen()) closePanel();
+    else if (ob && ob.i > 0){ ob.i--; ob.dir = -1; renderOnboard(); }
+    else if (ob) capApp.exitApp();
     else if (tab !== 'today'){ enterNext = true; spinNext = true; tab = 'today'; state.tab = tab; save(); render(); }
     else capApp.exitApp();
   });
@@ -814,6 +1211,11 @@ setInterval(() => { if (todayStr() !== lastDay){ lastDay = todayStr(); render();
 
 save();
 render();
+if (!state.setupDone) openOnboard();
+else {
+  const fresh = unseenNotes();
+  if (fresh.length) setTimeout(() => toast(fresh[0].t.replace(/&amp;/g, '&') + (fresh.length > 1 ? ' (+' + (fresh.length - 1) + ' more)' : ''), openPanel, 'View'), 900);
+}
 </script>
 </body>
 </html>

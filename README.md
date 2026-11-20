@@ -17,13 +17,14 @@ A budget tracker with just what you need, nothing more, nothing less. No account
 
 You give yourself an allowance every day, and whatever you don't spend carries over.
 
-- **Monthly budget**: the most you'll spend this month, say Rp1.000.000.
-- **Recurring payments**: subscriptions and bills, monthly, yearly or every few months. They come out of the monthly budget on the 1st.
+- **Budget**: what you live on, per month, per semester or per year. Rp6.000.000 every 6 months becomes Rp1.000.000 a month.
+- **Recurring payments**: subscriptions and bills. Monthly ones come out on the 1st. Longer ones are spread out by default, so a Rp180.000 yearly fee sets aside Rp15.000 every month (or take it all at once in the month it's due, if you prefer).
 - **Daily budget**: what you get each day, say Rp20.000. Skip spending for 3 days and you have Rp60.000.
 - **Available today**: everything you've been given so far this month, minus everything you've spent.
 - **Overspend?** You go negative, and tomorrow's allowance pays it back first.
+- **Starting mid-month?** Tell it how much you have left, and it plans the rest of the month around that. Your normal budget starts on the 1st.
 
-The app also suggests a daily budget (what's left after recurring payments ÷ days in the month, rounded down to the thousand), and warns you if your daily budget won't fit in the month.
+The app also suggests a daily budget (what's left after recurring payments ÷ days in the month, rounded down to the thousand), and the 🔔 bell lets you know when payments come out, when something's due next month, when your daily budget won't fit, and when it's time for a backup.
 
 The ring on the Today screen shows today's money (what you carried over plus today's allowance). It starts each day full and empties as you spend:
 
