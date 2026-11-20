@@ -1,101 +1,64 @@
 # Jatah.
 
-**J**ust **A**void **T**apping **A**round, **H**un.
+A budget tracker with just what you need, nothing more, nothing less. No accounts, no bank links, and your data never leaves your phone.
 
-A daily allowance budget tracker. No bank link, no account, no server, no analytics: everything lives on your phone and nothing is sent anywhere.
+<p align="center">
+  <img src="docs/screenshots/today-safe.png" width="200" alt="Today screen with Rp45.000 available, marked Safe">
+  <img src="docs/screenshots/today-low.png" width="200" alt="Today screen with Rp5.000 available, marked Running low">
+  <img src="docs/screenshots/today-debt.png" width="200" alt="Today screen at minus Rp20.000, marked In debt">
+</p>
+<p align="center">
+  <img src="docs/screenshots/history.png" width="200" alt="History screen listing each day's spending and balance">
+  <img src="docs/screenshots/add.png" width="200" alt="Add spending sheet with amount, note and date">
+  <img src="docs/screenshots/today-dark.png" width="200" alt="Today screen in dark mode">
+</p>
 
-## How the money works
+## How it works
 
-| Thing | What it means |
+You give yourself an allowance every day, and whatever you don't spend carries over.
+
+- **Monthly budget**: the most you'll spend this month, say Rp1.000.000.
+- **Recurring payments**: subscriptions and bills, monthly, yearly or every few months. They come out of the monthly budget on the 1st.
+- **Daily budget**: what you get each day, say Rp20.000. Skip spending for 3 days and you have Rp60.000.
+- **Available today**: everything you've been given so far this month, minus everything you've spent.
+- **Overspend?** You go negative, and tomorrow's allowance pays it back first.
+
+The app also suggests a daily budget (what's left after recurring payments ÷ days in the month, rounded down to the thousand), and warns you if your daily budget won't fit in the month.
+
+The ring on the Today screen shows today's money (what you carried over plus today's allowance). It starts each day full and empties as you spend:
+
+| | |
 | --- | --- |
-| **Budget for the month** | The most you allow yourself this month, e.g. Rp500.000. |
-| **Recurring** | Subscriptions and bills, every 1–60 months. Each is taken out on day 1 of a month it's due. |
-| **Final budget** | Budget for the month minus recurring due this month. |
-| **Recommended per day** | Final budget ÷ days in the month, rounded down to the thousand (16.666 → 16.000). |
-| **Budget per day** | What you give yourself each day, e.g. Rp15.000. It builds up: 3 untouched days = Rp45.000. |
-| **Available today** | Daily budget × days so far − what you've spent. Overspend goes negative and tomorrow's budget pays it back. |
+| 🟢 **Safe** | More than a third of today's money is left. |
+| 🟠 **Running low** | Less than a third of today's money left (or less than a third of a day's budget). |
+| 🔴 **In debt** | You're below zero. The ring shows how much of tomorrow you've already used. |
 
-The ring on the Today screen shows how much of your built-up budget is left, coloured by state: **green** safe, **orange** running low (less than half a day's budget left), **red** in debt (the ring then shows how much of tomorrow you've already used).
+## Get it
 
-## Project layout
+**Android**: download `jatah.apk` from the [latest release](https://github.com/d4nzk/jatah/releases/latest) on your phone and open it. Android will ask you to allow installing apps from your browser the first time. New versions install over the old one and keep your data.
 
-```
-www/                  the whole app (index.html) + PWA files
-  index.html
-  manifest.webmanifest
-  sw.js               offline cache for the web version
-  icons/
-assets/               source images for the Android icon and splash screen
-capacitor.config.json wraps www/ into an Android app
-.github/workflows/
-  android.yml         builds the APK on every push
-  pages.yml           publishes www/ to GitHub Pages
-```
+**iPhone, or any phone**: open **[d4nzk.github.io/jatah](https://d4nzk.github.io/jatah/)**.
+- iPhone: in Safari, tap *Share* → *Add to Home Screen*.
+- Android: in Chrome, tap *⋮* → *Install app*.
 
-There's no build step for the app itself. Edit `www/index.html` and push.
-
-## First-time setup
-
-0. **Move the workflows into place** (only needed once). In PowerShell, inside this folder:
-   ```powershell
-   mkdir .github; Move-Item setup\workflows .github\workflows; Remove-Item setup
-   ```
-1. **Create an empty repo** on GitHub (public, so GitHub Pages is free). Don't add a README there.
-2. **Add the signing key secrets before your first push**, so even the first APK can be updated later.
-   Repo → *Settings* → *Secrets and variables* → *Actions* → *New repository secret*. Add the two values from `../signing-key-PRIVATE/github-secrets.txt`:
-   - `ANDROID_KEYSTORE_PASSWORD`
-   - `ANDROID_KEYSTORE_BASE64`
-3. **Turn on Pages**: *Settings* → *Pages* → *Source*: **GitHub Actions**.
-4. **Push** from this folder:
-   ```bash
-   git init
-   git add .
-   git commit -m "Jatah. v1.0.0"
-   git branch -M main
-   git remote add origin https://github.com/<you>/jatah.git
-   git push -u origin main
-   ```
-
-Both workflows start on their own. Watch them in the *Actions* tab (the APK takes about 5 minutes).
-
-## Installing on Android
-
-**Easiest, as a GitHub Release:** in the repo, *Releases* → *Draft a new release* → *Choose a tag* → type `v1.0.0` → *Publish release*. A few minutes later `jatah.apk` appears on that release page. Open it on your phone, download, tap to install. Android will ask you to allow installs from your browser once.
-
-**Or from any run:** *Actions* → latest *Build Android APK* → *Artifacts* → `jatah-apk` (a zip with the APK inside; you need to be signed in to GitHub).
-
-To update: change things, bump `"version"` in `package.json`, push, publish a new release (`v1.0.1`, …). Install the new APK over the old one; your data stays.
-
-## Installing on iPhone (for friends)
-
-Open `https://<you>.github.io/<repo>/` in **Safari** → *Share* → **Add to Home Screen**. It opens full screen with its own icon and works offline.
-
-Android users can do the same in Chrome (*⋮* → *Install app*) if they don't want the APK.
-
-A real iOS app needs a Mac with Xcode (`npx cap add ios`), and without a paid Apple Developer account it stops opening after 7 days. The web version avoids all that.
+It gets its own icon, opens full screen and works offline.
 
 ## Your data
 
-- Stored in the app's local storage on that one phone. The APK, the web version and each browser keep separate data.
-- **Setup → Copy backup** puts everything on your clipboard as text. Paste it in your notes. **Restore backup** brings it back on any device or version.
-- Uninstalling the app or clearing its storage deletes your data, so back up first.
+- Everything is stored on your phone only. There's no server, no account, no analytics, and nothing is sent anywhere.
+- Because of that, nobody can recover your data for you. Use **Setup → Copy backup** now and then and keep the text somewhere safe. **Restore backup** brings it back on any phone.
+- The Android app and the web version keep separate data. Use backup and restore to move between them.
 
-## Updating the web version
+## Built with
 
-Change `VERSION` at the top of `www/sw.js` (e.g. `jatah-v2`) whenever you edit anything in `www/`, otherwise installed copies keep showing the old cached app.
+Plain HTML, CSS and JavaScript in a single file (`www/index.html`), with no framework and no build step. [Capacitor](https://capacitorjs.com/) wraps it into the Android app, and GitHub Actions builds the APK and publishes the web version.
 
-## Building on your own PC (optional)
+## Running it yourself
 
-Needs Node 20+, JDK 21 and Android Studio.
+Open `www/index.html` in a browser, and that's it.
 
-```bash
-npm install
-npx cap add android
-npm run android:icons
-npx cap sync android
-npx cap open android   # then press Run in Android Studio
-```
+If you fork this and want your own APK, you'll need your own signing key. See [docs/RELEASING.md](docs/RELEASING.md).
 
-## Keep the signing key safe
+## AI Usage Transparency
 
-`../signing-key-PRIVATE/` is deliberately outside this repo. Never commit it, and back it up. Every APK must be signed with the same key to install as an update; without it you'd have to uninstall (and lose data that isn't backed up).
+This project was fully built by Claude with my own prompts. I didn't build any of the code, but i take all of the responsibility for the app and bugs inside the app.

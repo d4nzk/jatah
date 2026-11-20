@@ -303,10 +303,13 @@ function summary(st, ym, upto){
     overPlan: s.daily * trackDays > finalBudget
   };
 }
-// safe: fine. danger: less than half a day's budget left. debt: below zero.
-function moneyState(available, daily){
+// Today's money ("pot") = what was left at the start of the day: carried over + today's allowance.
+// debt: below zero. danger: less than a third of today's money left, or less than a third of a day's
+// budget (so a tiny pot left over from paying back debt still counts as low). safe: everything else.
+function moneyState(available, daily, pot){
   if (available < 0) return 'debt';
-  if (available < daily * 0.5) return 'danger';
+  const base = Math.max(daily, pot == null ? daily : pot);
+  if (available < base / 3) return 'danger';
   return 'safe';
 }
 function parseAmount(str){
@@ -376,17 +379,18 @@ function renderToday(){
   const s = summary(state, ym, day);
   const todays = state.spend.filter(e => e.date === t);
   const spentToday = sum(todays.map(e => e.amount));
-  const st = moneyState(s.available, s.daily);
   const notStarted = s.accDays === 0;
+  const pot = s.available + spentToday;  // today's money before anything was spent today
+  const st = notStarted ? 'safe' : moneyState(s.available, s.daily, pot);
   const todayLeft = s.daily - spentToday;
-  // Ring: share of the built-up budget still left. In debt it shows how much of tomorrow is already used.
-  const ring = st === 'debt' ? (s.daily > 0 ? Math.min(1, -s.available / s.daily) : 1) : (s.accrued > 0 ? s.available / s.accrued : 0);
+  // Ring: share of today's money still left, so it starts each day full. In debt it shows how much of tomorrow is already used.
+  const ring = st === 'debt' ? (s.daily > 0 ? Math.min(1, -s.available / s.daily) : 1) : (pot > 0 ? s.available / pot : 0);
   const label = { safe: 'Safe', danger: 'Running low', debt: 'In debt' }[st];
   let sub;
   if (notStarted) sub = 'Tracking starts on ' + state.start + '.';
   else if (st === 'debt') sub = 'You\'re ' + rp(-s.available) + ' over. Tomorrow\'s ' + rp(s.daily) + ' pays it back first, leaving ' + rp(s.available + s.daily) + '.';
-  else if (st === 'danger') sub = 'Less than half a day\'s budget left. Tomorrow adds ' + rp(s.daily) + '.';
-  else sub = rp(s.daily) + ' × ' + s.accDays + (s.accDays === 1 ? ' day' : ' days') + ' − ' + rp(s.spentTo) + ' spent. Tomorrow adds ' + rp(s.daily) + '.';
+  else if (st === 'danger') sub = 'Less than a third of today\'s ' + rp(pot) + ' left. Tomorrow adds ' + rp(s.daily) + '.';
+  else sub = rp(s.available) + ' left of today\'s ' + rp(pot) + '. Tomorrow adds ' + rp(s.daily) + '.';
 
   view.innerHTML = storageNote() + exampleNote() + `
   <section class="card hero">
@@ -532,7 +536,7 @@ function renderHistory(){
         <button type="button" data-act="toggle-day" data-day="${ds}" aria-expanded="${openDay === ds}">
           <span class="d num">${d}<small>${wd}</small></span>
           <span><span class="sp num">${dsp ? 'Spent ' + rp(dsp) : 'No spending'}${tracked ? '' : ' · before tracking'}</span><span class="bar"><i class="${dsp > s.daily ? 'over' : ''}" style="width:${w}%"></i></span></span>
-          <span class="bal ${stClass(moneyState(bal, s.daily))}">${rp(bal)}</span>
+          <span class="bal ${stClass(moneyState(bal, s.daily, bal + dsp))}">${rp(bal)}</span>
         </button>
         ${openDay === ds ? `<div class="detail">${dayEntries.length ? dayEntries.map(itemHtml).join('') : '<div class="empty">Nothing recorded.</div>'}
           <button type="button" class="btn ghost sm" data-act="add-on" data-day="${ds}">+ Add to this day</button></div>` : ''}
