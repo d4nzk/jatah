@@ -1,7 +1,5 @@
 # Jatah.
 
-**J**ust **A**void **T**apping **A**round, **H**un.
-
 A daily allowance budget tracker. No bank link, no account, no server, no analytics: everything lives on your phone and nothing is sent anywhere.
 
 ## How the money works
