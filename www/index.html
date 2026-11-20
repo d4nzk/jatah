@@ -197,7 +197,8 @@ nav.tabs .add:active .plus{transform:scale(.94)}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13.5px;font-weight:600}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 
-.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:none;align-items:flex-end;justify-content:center}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:none;align-items:flex-end;justify-content:center;
+  padding-bottom:var(--kb, 0px);transition:padding-bottom .2s ease-out}
 .sheet-bg.open{display:flex}
 .sheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);max-height:92%;overflow:auto}
 .sheet h3{font-family:var(--display);font-size:20px;margin:0 0 14px}
@@ -271,7 +272,11 @@ textarea.inp{font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:
 .switch b{font-size:14px}
 
 /* First-time setup */
-.onboard{position:fixed;inset:0;z-index:15;background:var(--bg);overflow:auto;display:none}
+.onboard{position:fixed;inset:0;z-index:15;background:var(--bg);overflow:auto;display:none;padding-bottom:var(--kb, 0px)}
+/* While the keyboard is up: hide the tab bar and leave room to scroll inputs above the keyboard. */
+html.kb-open nav.tabs{transform:translateY(120%);transition:transform .15s}
+html.kb-open .app{padding-bottom:calc(var(--kb, 0px) + 24px)}
+html.kb-open .sheet{padding-bottom:18px}
 .onboard.open{display:block}
 .ob{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:20px;
   padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 20px)}
@@ -1197,6 +1202,37 @@ try {
     else if (tab !== 'today'){ enterNext = true; spinNext = true; tab = 'today'; state.tab = tab; save(); render(); }
     else capApp.exitApp();
   });
+} catch (e){}
+
+// On-screen keyboard. Newer Android versions draw the keyboard over the app instead of shrinking it,
+// so anything pinned to the bottom (sheets, setup buttons) would hide behind it. Measure how much of the
+// screen the keyboard covers and expose it as --kb; the CSS lifts things by that much.
+const kbRoot = document.documentElement;
+let kbBase = window.innerHeight;
+function setKb(px){
+  px = Math.max(0, Math.round(px || 0));
+  const open = px > 80;
+  kbRoot.style.setProperty('--kb', (open ? px : 0) + 'px');
+  kbRoot.classList.toggle('kb-open', open);
+  if (open){
+    const el = document.activeElement;
+    if (el && el.matches('input, textarea, select')) setTimeout(() => el.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' }), 60);
+  }
+}
+try {
+  const capKb = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
+  if (capKb){
+    // Inside the APK. If Android did shrink the app after all, only lift by what's still covered.
+    capKb.addListener('keyboardDidShow', info => setKb(info.keyboardHeight - (kbBase - window.innerHeight)));
+    capKb.addListener('keyboardWillHide', () => setKb(0));
+  } else if (window.visualViewport){
+    // In a browser or installed web app: the visible area shrinks while the page behind it doesn't.
+    const vv = window.visualViewport;
+    const update = () => setKb(window.innerHeight - vv.height - vv.offsetTop);
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+  }
+  window.addEventListener('orientationchange', () => setTimeout(() => { if (!kbRoot.classList.contains('kb-open')) kbBase = window.innerHeight; }, 400));
 } catch (e){}
 
 // Offline support when installed from the website (not needed inside the APK).

@@ -11,6 +11,7 @@ Notes for whoever maintains the repo: how the APK and the web version get built 
 | `capacitor.config.json` | App id (`com.jatah.budget`), name and Android settings. |
 | `assets/` | Source images for the Android icon and splash screen. |
 | `www/sw.js` | Offline cache for the web version. |
+| `scripts/android-theme.mjs` | Runs after `cap sync` and colours Android's status and navigation bars to match the app. |
 
 The `android/` folder is generated fresh on every build, so it isn't in the repo.
 
