@@ -1,0 +1,9 @@
+{
+  "appId": "com.jatah.budget",
+  "appName": "Jatah.",
+  "webDir": "www",
+  "backgroundColor": "#F6EFE7",
+  "android": {
+    "adjustMarginsForEdgeToEdge": "auto"
+  }
+}
