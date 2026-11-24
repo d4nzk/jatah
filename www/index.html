@@ -82,7 +82,7 @@ main{display:flex;flex-direction:column;gap:12px}
 .gauge.debt{--fill:var(--debt);--soft:var(--debt-soft);--text:var(--debt-ink)}
 .gauge .track{stroke:var(--soft);transition:stroke .4s}
 .gauge .arc{stroke:var(--fill);stroke-linecap:round;transition:stroke .4s}
-.gauge .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 14%}
+.gauge .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 21%}
 .gauge .big{font-family:var(--display);font-weight:800;line-height:1.05;letter-spacing:-.03em;margin:4px 0 8px;white-space:nowrap;color:var(--text);transition:color .4s}
 .status{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--text)}
 .gauge .status{background:var(--soft)}
@@ -300,6 +300,44 @@ html.kb-open .sheet{padding-bottom:18px}
 .opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
 .calc{font-size:14px;color:var(--accent-text);font-weight:600;min-height:1.4em}
 .err{color:var(--debt-ink) !important}
+
+/* Money fields: "Rp" in front, dots while typing, filled in with the app's own keypad */
+.hint{font-size:12.5px;color:var(--muted)}
+.hint:empty{display:none}
+.money{position:relative;display:flex;align-items:center}
+.money .cur{position:absolute;left:14px;font-family:var(--display);font-weight:600;font-size:19px;color:var(--muted);pointer-events:none}
+.money .inp{padding-left:50px;caret-color:transparent;cursor:pointer}
+.money.active .inp{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.keypad{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);
+  box-shadow:0 -10px 30px var(--shadow);border-radius:20px 20px 0 0;padding:8px 10px calc(env(safe-area-inset-bottom) + 10px);
+  transform:translateY(105%);visibility:hidden;transition:transform .25s cubic-bezier(.22,1,.36,1), visibility 0s linear .25s}
+.keypad.open{transform:none;visibility:visible;transition:transform .25s cubic-bezier(.22,1,.36,1), visibility 0s}
+.kp-in{max-width:480px;margin:0 auto}
+.kp-top{display:flex;justify-content:space-between;align-items:center;padding:2px 4px 8px;gap:12px}
+.kp-top span{font-size:13px;font-weight:600;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kp-top button{border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;border-radius:10px;padding:8px 18px}
+.kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kp-grid button{height:54px;border:0;border-radius:14px;background:var(--bg);font-family:var(--display);font-size:24px;font-weight:600;color:var(--ink);
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center}
+.kp-grid button:active{background:var(--accent-soft)}
+.kp-grid .k000{font-size:19px}
+.kp-grid .kdel svg{width:26px;height:26px}
+
+/* Spending / Money in switch */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.seg button{border:0;background:none;border-radius:9px;padding:9px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px var(--shadow)}
+
+/* Month ring inside the day ring */
+.gauge .track.m{stroke:var(--line)}
+.gauge .arc.m{stroke:var(--accent)}
+.gauge .arc.m.over{stroke:var(--debt)}
+.legend{display:flex;gap:6px 16px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:99px;display:inline-block;flex:none}
+.amt.in{color:var(--safe-ink)}
 </style>
 </head>
 <body>
@@ -332,6 +370,18 @@ html.kb-open .sheet{padding-bottom:18px}
 
 <div class="sheet-bg" id="sheetBg" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheet" id="sheet"></div>
+</div>
+<div class="keypad" id="keypad" aria-hidden="true">
+  <div class="kp-in">
+    <div class="kp-top"><span id="kpLabel">Amount</span><button type="button" data-key="done">Done</button></div>
+    <div class="kp-grid">
+      <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+      <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+      <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+      <button type="button" data-key="000" class="k000">000</button><button type="button" data-key="0">0</button>
+      <button type="button" data-key="del" class="kdel" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9l-6 6M11 9l6 6"/></svg></button>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button type="button" id="toastBtn">Undo</button></div>
 
@@ -378,12 +428,39 @@ function recChargeIn(r, ym){
 function recommendedDaily(finalBudget, days){
   return finalBudget > 0 && days > 0 ? Math.floor(finalBudget / days / 1000) * 1000 : 0;
 }
+// Daily budget as a timeline: each change applies from its date onward, so past days never change.
+// state.dailyLog = [{ from: 'YYYY-MM-DD', daily }] sorted by date. Older data without a log falls back to the month settings.
+function dailyAt(st, date){
+  const log = st.dailyLog;
+  let v = null;
+  if (log) for (const e of log){ if (e.from <= date) v = e.daily; else break; }
+  return v != null ? v : (settingsFor(st, date.slice(0, 7)).daily || 0);
+}
+function setDailyFrom(st, from, daily){
+  if (!st.dailyLog) st.dailyLog = [];
+  if (st.dailyLog.length && dailyAt(st, from) === daily && st.dailyLog.every(e => e.from <= from)) return false;
+  st.dailyLog = st.dailyLog.filter(e => e.from < from);
+  st.dailyLog.push({ from, daily });
+  st.dailyLog.sort((x, y) => x.from < y.from ? -1 : 1);
+  return true;
+}
+// Extra money (state.extra): 'today' lands on its date; 'spread' is shared over the rest of that month,
+// with any rupiah left over from dividing added to the first day.
+function extraOnDay(e, ym, d){
+  if (e.date.slice(0, 7) !== ym) return 0;
+  const ed = +e.date.slice(8, 10);
+  if (e.mode !== 'spread') return d === ed ? e.amount : 0;
+  if (d < ed) return 0;
+  const n = daysIn(ym) - ed + 1, per = Math.floor(e.amount / n);
+  return per + (d === ed ? e.amount - per * n : 0);
+}
 // Summary of month `ym` counted through day `upto` (inclusive).
 function summary(st, ym, upto){
   const s = settingsFor(st, ym), days = daysIn(ym);
   const startYm = st.start.slice(0, 7), startDay = +st.start.slice(8, 10);
   const firstDay = ym < startYm ? null : (ym === startYm ? startDay : 1);
-  const accDays = firstDay === null ? 0 : Math.max(0, Math.min(upto, days) - firstDay + 1);
+  const last = Math.min(Math.max(upto, 0), days);
+  const accDays = firstDay === null ? 0 : Math.max(0, last - firstDay + 1);
   const trackDays = firstDay === null ? 0 : days - firstDay + 1;
   // Joined mid-month and said how much was left: that amount is the whole budget for the rest of the month,
   // and recurring payments start next month.
@@ -391,19 +468,34 @@ function summary(st, ym, upto){
   const recs = midStart ? [] : st.recurring.map(r => ({ r, charge: recChargeIn(r, ym) })).filter(x => x.charge > 0);
   const recTotal = sum(recs.map(x => x.charge));
   const monthly = midStart ? st.startLeft : monthlyOf(s);
-  const finalBudget = monthly - recTotal;
+  const baseFinal = monthly - recTotal;
+  const extras = (st.extra || []).filter(e => e.date.slice(0, 7) === ym);
+  const extraTotal = sum(extras.map(e => e.amount));
+  const finalBudget = baseFinal + extraTotal;
+  // What each day gives you: its daily budget (if tracked) plus any extra money landing on it.
+  const dayDaily = [0], dayExtra = [0];
+  let plannedTotal = 0;
+  for (let d = 1; d <= days; d++){
+    const dd = firstDay !== null && d >= firstDay ? dailyAt(st, ym + '-' + pad(d)) : 0;
+    dayDaily.push(dd); plannedTotal += dd;
+    dayExtra.push(sum(extras.map(e => extraOnDay(e, ym, d))));
+  }
+  let accrued = 0, extraTo = 0;
+  for (let d = 1; d <= last; d++){ accrued += dayDaily[d] + dayExtra[d]; extraTo += dayExtra[d]; }
   const entries = st.spend.filter(e => e.date.slice(0, 7) === ym);
   const spentTo = sum(entries.filter(e => +e.date.slice(8, 10) <= upto).map(e => e.amount));
   const spentMonth = sum(entries.map(e => e.amount));
-  const accrued = s.daily * accDays;
+  const ref = Math.min(Math.max(last, firstDay || 1), days);
   return {
-    ym, days, monthly, amount: s.amount, every: s.every || 1, daily: s.daily, midStart, recs, recTotal, finalBudget,
-    recommended: recommendedDaily(finalBudget, midStart ? trackDays : days),
+    ym, days, monthly, amount: s.amount, every: s.every || 1, midStart, recs, recTotal,
+    daily: dailyAt(st, ym + '-' + pad(ref)), todayExtra: dayExtra[ref] || 0, dayDaily, dayExtra,
+    extras, extraTotal, extraTo, baseFinal, finalBudget,
+    recommended: recommendedDaily(baseFinal, midStart ? trackDays : days),
     firstDay, accDays, trackDays, accrued, spentTo, spentMonth,
     available: accrued - spentTo,
     leftInMonth: finalBudget - spentMonth,
-    plannedTotal: s.daily * trackDays,
-    overPlan: s.daily * trackDays > finalBudget
+    plannedTotal,
+    overPlan: plannedTotal > baseFinal
   };
 }
 // Today's money ("pot") = what was left at the start of the day: carried over + today's allowance.
@@ -440,7 +532,7 @@ const everyLabel = n => n === 1 ? 'Every month' : n === 12 ? 'Every year' : n % 
 const KEY = 'jatah.v1';
 let storageOK = true;
 function seed(){
-  return { v: 2, start: todayStr(), startLeft: null, months: {}, recurring: [], spend: [], setupDone: false, seen: [], tab: 'today' };
+  return { v: 3, start: todayStr(), startLeft: null, months: {}, dailyLog: [], recurring: [], spend: [], extra: [], setupDone: false, seen: [], tab: 'today' };
 }
 function load(){
   try {
@@ -450,6 +542,11 @@ function load(){
       if (o && o.months){
         if (o.setupDone === undefined) o.setupDone = !o.example;  // installs from before the setup screen
         if (!o.seen) o.seen = [];
+        if (!o.extra) o.extra = [];
+        if (!o.dailyLog){
+          // Turn per-month daily budgets into the timeline, starting each month on its 1st (or on the start date).
+          o.dailyLog = Object.keys(o.months).sort().map(k => ({ from: k === o.start.slice(0, 7) ? o.start : k + '-01', daily: o.months[k].daily || 0 }));
+        }
         return o;
       }
     }
@@ -475,35 +572,45 @@ function render(){
   view.classList.remove('enter');
   if (enterNext){ void view.offsetWidth; view.classList.add('enter'); enterNext = false; }
   updateBell();
+  if (kpTarget && !kpTarget.isConnected) closeKeypad();
 }
 
 function renderToday(){
   const t = todayStr(), ym = t.slice(0, 7), day = +t.slice(8, 10);
   const s = summary(state, ym, day);
   const todays = state.spend.filter(e => e.date === t);
+  const todaysIn = (state.extra || []).filter(e => e.date === t);
   const spentToday = sum(todays.map(e => e.amount));
   const notStarted = s.accDays === 0;
   const pot = s.available + spentToday;  // today's money before anything was spent today
   const st = notStarted ? 'safe' : moneyState(s.available, s.daily, pot);
-  const todayLeft = s.daily - spentToday;
-  // Ring: share of today's money still left, so it starts each day full. In debt it shows how much of tomorrow is already used.
+  const todayGets = s.daily + s.todayExtra;
+  const todayLeft = todayGets - spentToday;
+  // Outer ring: share of today's money still left, so it starts each day full. In debt it shows how much of tomorrow is already used.
   const ring = st === 'debt' ? (s.daily > 0 ? Math.min(1, -s.available / s.daily) : 1) : (pot > 0 ? s.available / pot : 0);
+  // Inner ring: share of the whole month's budget still left.
+  const monthRing = s.leftInMonth < 0 ? 1 : (s.finalBudget > 0 ? s.leftInMonth / s.finalBudget : 0);
   const label = { safe: 'Safe', danger: 'Running low', debt: 'In debt' }[st];
   let sub;
   if (notStarted) sub = 'Tracking starts on ' + state.start + '.';
   else if (st === 'debt') sub = 'You\'re ' + rp(-s.available) + ' over. Tomorrow\'s ' + rp(s.daily) + ' pays it back first, leaving ' + rp(s.available + s.daily) + '.';
   else if (st === 'danger') sub = 'Less than a third of today\'s ' + rp(pot) + ' left. Tomorrow adds ' + rp(s.daily) + '.';
   else sub = rp(s.available) + ' left of today\'s ' + rp(pot) + '. Tomorrow adds ' + rp(s.daily) + '.';
+  const items = [...todays.map(itemHtml), ...todaysIn.map(extraHtml)];
 
   view.innerHTML = `
   <section class="card hero">
     <div class="gauge ${st} ${spinNext ? 'spin' : ''}">
-      ${ringSvg(ring, st)}
+      ${ringSvg(ring, st, monthRing, s.leftInMonth < 0)}
       <div class="center">
         <div class="label">Available today</div>
         <div class="big num" id="bigNum" style="font-size:${bigSize(rp(s.available))}">${rp(s.available)}</div>
         <span class="status"><i></i>${label}</span>
       </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:${st === 'debt' ? 'var(--debt)' : st === 'danger' ? 'var(--danger)' : 'var(--safe)'}"></i>Today</span>
+      <span><i style="background:${s.leftInMonth < 0 ? 'var(--debt)' : 'var(--accent)'}"></i>${s.leftInMonth < 0 ? 'Month: ' + rp(-s.leftInMonth) + ' over budget' : 'Month: ' + rp(s.leftInMonth) + ' of ' + rp(s.finalBudget) + ' left'}</span>
     </div>
     <div class="sub">${sub}</div>
   </section>
@@ -512,11 +619,12 @@ function renderToday(){
     <h2>Today</h2>
     <div class="rows">
       <div class="row"><span class="k">Today's budget</span><span class="v">${rp(s.daily)}</span></div>
+      ${s.todayExtra ? `<div class="row"><span class="k">Extra money today</span><span class="v pos-t">+${rp(s.todayExtra)}</span></div>` : ''}
       <div class="row"><span class="k">Spent today</span><span class="v">${rp(spentToday)}</span></div>
       <div class="row total"><span class="k">Today on its own</span><span class="v ${todayLeft < 0 ? 'neg-t' : 'pos-t'}">${rp(todayLeft)}</span></div>
     </div>
     <div class="list" style="margin-top:8px">
-      ${todays.length ? todays.map(itemHtml).join('') : '<div class="empty">Nothing spent yet today.</div>'}
+      ${items.length ? items.join('') : '<div class="empty">Nothing spent yet today.</div>'}
     </div>
   </section>
 
@@ -528,6 +636,7 @@ function renderToday(){
            <div class="row"><span class="k">Recurring payments</span><span class="v muted">From ${monthOnly(idxYm(ymIdx(ym) + 1))}</span></div>`
         : `<div class="row"><span class="k">Budget for the month${s.every > 1 ? `<br><small>${rp(s.amount)} ÷ ${s.every} months</small>` : ''}</span><span class="v">${rp(s.monthly)}</span></div>
            <div class="row"><span class="k">Recurring payments</span><span class="v">${s.recTotal ? '−' + rp(s.recTotal) : rp(0)}</span></div>`}
+      ${s.extraTotal ? `<div class="row"><span class="k">Extra money</span><span class="v pos-t">+${rp(s.extraTotal)}</span></div>` : ''}
       <div class="row total"><span class="k">Final budget for the month</span><span class="v ${s.finalBudget < 0 ? 'neg-t' : ''}">${rp(s.finalBudget)}</span></div>
       <div class="row"><span class="k">Spent so far</span><span class="v">${rp(s.spentMonth)}</span></div>
       <div class="row"><span class="k">Left in the month</span><span class="v ${s.leftInMonth < 0 ? 'neg-t' : 'pos-t'}">${rp(s.leftInMonth)}</span></div>
@@ -541,15 +650,15 @@ function renderToday(){
   spinNext = false;
 }
 
-// Keep the big number inside the ring however long it gets.
+// Keep the big number inside the inner ring however long it gets.
 function bigSize(text){
   const n = text.length;
-  const px = n <= 8 ? 38 : n === 9 ? 34 : n === 10 ? 30 : n === 11 ? 27 : 23;
+  const px = n <= 8 ? 33 : n === 9 ? 30 : n === 10 ? 27 : n === 11 ? 24 : 21;
   return 'min(' + px + 'px, ' + (px / 3.9).toFixed(1) + 'vw)';
 }
 
 const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-let lastRing = 0, lastAvail = 0, spinNext = true, countRaf = 0;
+let lastRing = 0, lastRingM = 0, lastAvail = 0, spinNext = true, countRaf = 0;
 function countUp(el, from, to){
   cancelAnimationFrame(countRaf);
   if (!el || from === to || reduceMotion()) return;
@@ -562,16 +671,20 @@ function countUp(el, from, to){
   el.textContent = rp(from);
   countRaf = requestAnimationFrame(step);
 }
-function ringSvg(v, st){
-  const R = 96, C = 2 * Math.PI * R;
-  v = Math.max(0, Math.min(1, v || 0));
-  // Draw at the previous value, then let CSS sweep it to the new one.
-  const svg = `<svg viewBox="0 0 220 220" role="img" aria-label="${Math.round(v * 100)}% ${st === 'debt' ? 'of tomorrow already used' : 'of built-up budget left'}">
-    <circle class="track" cx="110" cy="110" r="${R}" fill="none" stroke-width="18"/>
-    <circle class="arc" data-c="${C}" data-v="${v}" cx="110" cy="110" r="${R}" fill="none" stroke-width="18"
+function ringSvg(v, st, m, mOver){
+  const R = 96, C = 2 * Math.PI * R, R2 = 76, C2 = 2 * Math.PI * R2;
+  const clamp = x => Math.max(0, Math.min(1, x || 0));
+  v = clamp(v); m = clamp(m);
+  // Draw at the previous values, then let CSS sweep them to the new ones.
+  const svg = `<svg viewBox="0 0 220 220" role="img" aria-label="Today: ${Math.round(v * 100)}% ${st === 'debt' ? 'of tomorrow already used' : 'left'}. Month: ${mOver ? 'over budget' : Math.round(m * 100) + '% left'}.">
+    <circle class="track" cx="110" cy="110" r="${R}" fill="none" stroke-width="16"/>
+    <circle class="arc" data-c="${C}" data-v="${v}" cx="110" cy="110" r="${R}" fill="none" stroke-width="16"
       stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - lastRing)}"/>
+    <circle class="track m" cx="110" cy="110" r="${R2}" fill="none" stroke-width="7"/>
+    <circle class="arc m ${mOver ? 'over' : ''}" data-c="${C2}" data-v="${m}" cx="110" cy="110" r="${R2}" fill="none" stroke-width="7"
+      stroke-dasharray="${C2}" stroke-dashoffset="${C2 * (1 - lastRingM)}"/>
   </svg>`;
-  lastRing = v;
+  lastRing = v; lastRingM = m;
   requestAnimationFrame(() => requestAnimationFrame(() => {
     document.querySelectorAll('.gauge .arc').forEach(a => a.setAttribute('stroke-dashoffset', String(+a.dataset.c * (1 - +a.dataset.v))));
   }));
@@ -584,6 +697,12 @@ function itemHtml(e){
   return `<div class="item ${e.id === newId ? 'new' : ''}"><div class="main"><div class="t">${esc(e.note || 'Spending')}</div></div>
     <div class="amt">${rp(e.amount)}</div>
     <button type="button" class="x" data-act="del-spend" data-id="${e.id}" aria-label="Delete ${esc(e.note || 'spending')}">✕</button></div>`;
+}
+function extraHtml(e){
+  const how = e.mode === 'spread' ? 'Spread over the rest of ' + monthOnly(e.date.slice(0, 7)) : 'Added to ' + (e.date === todayStr() ? 'today' : 'the ' + ord(+e.date.slice(8, 10)));
+  return `<div class="item ${e.id === newId ? 'new' : ''}"><div class="main"><div class="t">${esc(e.note || 'Money in')}</div><div class="s">${how}</div></div>
+    <div class="amt in">+${rp(e.amount)}</div>
+    <button type="button" class="x" data-act="del-extra" data-id="${e.id}" aria-label="Delete ${esc(e.note || 'money in')}">✕</button></div>`;
 }
 
 function renderRecurring(){
@@ -635,20 +754,22 @@ function renderHistory(){
       const ds = ym + '-' + pad(d);
       const tracked = d >= s.firstDay;
       const dayEntries = state.spend.filter(e => e.date === ds);
+      const dayIn = (state.extra || []).filter(e => e.date === ds);
       const dsp = sum(dayEntries.map(e => e.amount));
-      if (tracked) acc += s.daily;
+      const give = s.dayDaily[d] + s.dayExtra[d];
+      acc += give;
       spent += dsp;
-      if (!tracked && !dsp) continue;
+      if (!tracked && !dsp && !s.dayExtra[d]) continue;
       const bal = acc - spent;
-      const w = s.daily > 0 ? Math.min(100, dsp / s.daily * 100) : (dsp ? 100 : 0);
+      const w = give > 0 ? Math.min(100, dsp / give * 100) : (dsp ? 100 : 0);
       const wd = WD[new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1, d).getDay()];
       list.push(`<div class="day ${isCur && d === today ? 'today' : ''}">
         <button type="button" data-act="toggle-day" data-day="${ds}" aria-expanded="${openDay === ds}">
           <span class="d num">${d}<small>${wd}</small></span>
-          <span><span class="sp num">${dsp ? 'Spent ' + rp(dsp) : 'No spending'}${tracked ? '' : ' · before tracking'}</span><span class="bar"><i class="${dsp > s.daily ? 'over' : ''}" style="width:${w}%"></i></span></span>
-          <span class="bal ${stClass(moneyState(bal, s.daily, bal + dsp))}">${rp(bal)}</span>
+          <span><span class="sp num">${dsp ? 'Spent ' + rp(dsp) : 'No spending'}${tracked ? '' : ' · before tracking'}</span><span class="bar"><i class="${dsp > give ? 'over' : ''}" style="width:${w}%"></i></span></span>
+          <span class="bal ${stClass(moneyState(bal, s.dayDaily[d], bal + dsp))}">${rp(bal)}</span>
         </button>
-        ${openDay === ds ? `<div class="detail">${dayEntries.length ? dayEntries.map(itemHtml).join('') : '<div class="empty">Nothing recorded.</div>'}
+        ${openDay === ds ? `<div class="detail">${dayEntries.length || dayIn.length ? [...dayEntries.map(itemHtml), ...dayIn.map(extraHtml)].join('') : '<div class="empty">Nothing recorded.</div>'}
           <button type="button" class="btn ghost sm" data-act="add-on" data-day="${ds}">+ Add to this day</button></div>` : ''}
       </div>`);
     }
@@ -664,7 +785,8 @@ function renderHistory(){
     <div class="rows" style="margin-top:10px">
       <div class="row"><span class="k">Final budget</span><span class="v">${rp(s.finalBudget)}</span></div>
       <div class="row"><span class="k">Spent</span><span class="v">${rp(s.spentMonth)}</span></div>
-      <div class="row"><span class="k">${isCur ? 'Daily budget to date' : 'Daily budget total'}</span><span class="v">${rp(s.accrued)}</span></div>
+      ${s.extraTotal ? `<div class="row"><span class="k">Extra money</span><span class="v pos-t">+${rp(s.extraTotal)}</span></div>` : ''}
+      <div class="row"><span class="k">${isCur ? 'Given to you so far' : 'Given to you in total'}</span><span class="v">${rp(s.accrued)}</span></div>
       <div class="row total"><span class="k">${isCur ? 'Available today' : 'Ended the month at'}</span><span class="v ${stClass(moneyState(s.available, s.daily)) || 'pos-t'}">${rp(s.available)}</span></div>
     </div>
   </section>
@@ -688,6 +810,7 @@ function renderSetup(){
   const amount = cfg.amount != null ? cfg.amount : monthlyOf(cfg), every = cfg.every || 1;
   const curM = MONTHS[+ym.slice(5, 7) - 1], nextM = MONTHS[+next.slice(5, 7) - 1];
   const startDay = +state.start.slice(8, 10);
+  const firstMonthNow = state.start.slice(0, 7) === ym;  // the start date only matters during your first month
   view.innerHTML = `
   <form class="form" id="setupForm" style="gap:12px">
   <section class="card form">
@@ -699,17 +822,13 @@ function renderSetup(){
       <span class="calc" id="fCalc">${perMonthText(amount, every)}</span>
     </div>
     ${s.midStart ? `
-      <div class="field"><label for="fDaily">Daily budget for the rest of ${curM}</label>
-        <input class="inp num" id="fDaily" inputmode="numeric" value="${nf.format(s.daily)}" autocomplete="off">
-        <span class="hint">Recommended: ${rp(s.recommended)} (${rp(s.finalBudget)} left ÷ ${s.trackDays} days).</span></div>
-      <div class="field"><label for="fDailyNext">Daily budget from ${nextM} 1st</label>
-        <input class="inp num" id="fDailyNext" inputmode="numeric" value="${nf.format(nextCfg.daily)}" autocomplete="off">
-        <span class="hint" id="fRecHint"></span></div>` : `
-      <div class="field"><label for="fDaily">Daily budget</label>
-        <input class="inp num" id="fDaily" inputmode="numeric" value="${nf.format(s.daily)}" autocomplete="off">
-        <span class="hint" id="fRecHint"></span></div>`}
+      ${amountField('fDaily', 'Daily budget for the rest of ' + curM, dailyAt(state, t), 'Recommended: ' + rp(s.recommended) + ' (' + rp(s.baseFinal) + ' left ÷ ' + s.trackDays + ' days). Changes apply from today.')}
+      ${amountField('fDailyNext', 'Daily budget from ' + nextM + ' 1st', dailyAt(state, next + '-01'))}
+      <span class="hint" id="fRecHint" style="margin-top:-8px"></span>` : `
+      ${amountField('fDaily', 'Daily budget', dailyAt(state, t), 'Changes apply from today. Days before today keep their budget.')}
+      <span class="hint" id="fRecHint" style="margin-top:-8px"></span>`}
   </section>
-  <section class="card form">
+  ${firstMonthNow ? `<section class="card form">
     <h2 style="margin:0">Your first month</h2>
     <div class="field"><label for="fStart">Started on</label>
       <input class="inp" id="fStart" type="date" value="${state.start}"></div>
@@ -717,7 +836,7 @@ function renderSetup(){
       ${amountField('fLeft', 'Left for that month when you started', state.startLeft || 0)}
       <span class="hint">That amount is your whole budget until the month ends. Leave it empty to use your normal budget instead.</span>
     </div>
-  </section>
+  </section>` : ''}
   <button class="btn block" type="submit">Save</button>
   <button type="button" class="btn ghost block" data-act="redo-setup">Go through the setup again</button>
   </form>
@@ -729,8 +848,9 @@ function renderSetup(){
       <button type="button" class="btn ghost sm" data-act="import">Restore backup</button>
       <button type="button" class="btn ghost sm" data-act="erase" style="color:var(--debt-ink)">Erase everything</button>
     </div>
-  </section>`;
-  wireAmount('fAmt'); wireAmount('fLeft');
+  </section>
+  ${recentChangesCard()}`;
+  wireAmount('fAmt'); wireAmount('fLeft'); wireAmount('fDaily'); wireAmount('fDailyNext');
   const fEvery = $('#fEvery');
   // Recommended daily budget for a full month, from what's typed right now.
   const updateRec = () => {
@@ -748,18 +868,24 @@ function renderSetup(){
   fEvery.addEventListener('input', updateRec);
   setupUpdateRec = updateRec;
   updateRec();
-  $('#fStart').addEventListener('input', e => { $('#fLeftWrap').hidden = !(+String(e.target.value).slice(8, 10) > 1); });
+  if ($('#fStart')) $('#fStart').addEventListener('input', e => { $('#fLeftWrap').hidden = !(+String(e.target.value).slice(8, 10) > 1); });
   $('#setupForm').addEventListener('submit', e => {
     e.preventDefault();
     const amt = parseAmount($('#fAmt').value), ev = Math.max(1, Math.min(60, parseInt(fEvery.value, 10) || 1));
     const daily = parseAmount($('#fDaily').value);
     const wasMid = s.midStart, dailyNext = wasMid ? parseAmount($('#fDailyNext').value) : null;
+    checkpoint('Changed your budget');
     for (const k of Object.keys(state.months)) if (k > ym) delete state.months[k];
     state.months[ym] = { amount: amt, every: ev, daily };
     if (wasMid) state.months[next] = { amount: amt, every: ev, daily: dailyNext };
-    const st = $('#fStart').value;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(st)) state.start = st;
-    state.startLeft = (+state.start.slice(8, 10) > 1 && $('#fLeft').value.trim() !== '') ? parseAmount($('#fLeft').value) : null;
+    // A new daily budget counts from today; days that already happened keep theirs.
+    setDailyFrom(state, t, daily);
+    if (wasMid) setDailyFrom(state, next + '-01', dailyNext);
+    if ($('#fStart')){
+      const st = $('#fStart').value;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(st)) state.start = st;
+      state.startLeft = (+state.start.slice(8, 10) > 1 && $('#fLeft').value.trim() !== '') ? parseAmount($('#fLeft').value) : null;
+    }
     state.example = false; save(); toast('Saved'); render();
   });
 }
@@ -774,6 +900,7 @@ function openSheet(html, onOpen){
 }
 // Slide the sheet down and fade the backdrop before removing it.
 function closeSheet(){
+  closeKeypad();
   if (!sheetBg.classList.contains('open') || sheetBg.classList.contains('closing')) return;
   const my = ++sheetToken;
   const done = () => { if (my !== sheetToken) return; sheetBg.classList.remove('open', 'closing'); sheet.innerHTML = ''; };
@@ -784,19 +911,32 @@ function closeSheet(){
 sheetBg.addEventListener('click', e => { if (e.target === sheetBg) closeSheet(); });
 document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (panelOpen()) closePanel(); else closeSheet(); });
 
-function amountField(id, label, val){
+function amountField(id, label, val, hint){
   return `<div class="field"><label for="${id}">${label}</label>
-    <input class="inp big num" id="${id}" inputmode="text" placeholder="0" value="${val ? nf.format(val) : ''}" autocomplete="off">
-    <span class="hint num" id="${id}P">${val ? rp(val) : 'Type 10000, 10k or 10rb'}</span></div>`;
+    <div class="money"><span class="cur" aria-hidden="true">Rp</span><input class="inp big num" id="${id}" data-money readonly inputmode="none" placeholder="0" value="${val ? nf.format(val) : ''}" autocomplete="off"></div>
+    <span class="hint" id="${id}P">${hint || ''}</span></div>`;
+}
+// Show an error under a money field; it goes back to its normal hint as soon as the amount changes.
+function fieldError(id, msg){
+  const p = $('#' + id + 'P'); if (!p) return;
+  if (!p.classList.contains('err')) p.dataset.base = p.textContent;
+  p.textContent = msg; p.classList.add('err');
+  const i = $('#' + id); if (i) i.focus();
 }
 function wireAmount(id){
-  const i = $('#' + id), p = $('#' + id + 'P');
-  i.addEventListener('input', () => { const v = parseAmount(i.value); p.classList.remove('err'); p.textContent = v ? rp(v) : 'Type 10000, 10k or 10rb'; });
+  const i = $('#' + id), p = $('#' + id + 'P'); if (!i || !p) return;
+  i.addEventListener('input', () => { if (p.classList.contains('err')){ p.classList.remove('err'); p.textContent = p.dataset.base || ''; } });
 }
 
-function openAddSpend(date){
+function addTabs(kind){
+  return `<div class="seg" role="tablist" aria-label="What are you adding?">
+    <button type="button" role="tab" data-act="add-kind" data-kind="spend" aria-pressed="${kind === 'spend'}" aria-selected="${kind === 'spend'}">Spending</button>
+    <button type="button" role="tab" data-act="add-kind" data-kind="in" aria-pressed="${kind === 'in'}" aria-selected="${kind === 'in'}">Money in</button></div>`;
+}
+function openAddSpend(date, kind){
   const d = date || todayStr();
-  openSheet(`<h3 id="sheetTitle">Add spending</h3>
+  if (kind === 'in') return openMoneyIn(d);
+  openSheet(addTabs('spend') + `<h3 id="sheetTitle" class="sr-only">Add spending</h3>
   <form class="form" id="spForm">
     ${amountField('spAmt', 'Amount', 0)}
     <div class="chips">${[2000, 5000, 10000, 15000, 20000, 50000].map(v => `<button type="button" class="chip" data-add="${v}">+${v / 1000}k</button>`).join('')}</div>
@@ -812,11 +952,65 @@ function openAddSpend(date){
     $('#spForm').addEventListener('submit', e => {
       e.preventDefault();
       const amount = parseAmount(a.value);
-      if (!amount){ a.focus(); $('#spAmtP').textContent = 'Enter an amount above zero'; return; }
-      const date = $('#spDate').value || todayStr();
+      if (!amount) return fieldError('spAmt', 'Enter an amount above zero');
+      const date = $('#spDate').value || todayStr(), note = $('#spNote').value.trim();
+      checkpoint('Added ' + rp(amount) + ' spending' + (note ? ' (' + note + ')' : ''));
       newId = uid();
-      state.spend.push({ id: newId, date, amount, note: $('#spNote').value.trim() });
+      state.spend.push({ id: newId, date, amount, note });
       save(); closeSheet(); render(); newId = null; toast('Added ' + rp(amount));
+    });
+    setTimeout(() => a.focus(), 60);
+  });
+}
+// Extra money: ask whether to spread it over the rest of the month or put it all on one day,
+// and show what each choice means in rupiah before saving.
+function openMoneyIn(d){
+  let mode = 'spread';
+  openSheet(addTabs('in') + `<h3 id="sheetTitle" class="sr-only">Add money</h3>
+  <form class="form" id="inForm">
+    ${amountField('inAmt', 'Amount', 0)}
+    <div class="field"><label for="inNote">Where's it from?</label><input class="inp" id="inNote" placeholder="From mom, freelance, refund…" maxlength="60" autocomplete="off"></div>
+    <div class="field"><label for="inDate">Date</label><input class="inp" type="date" id="inDate" value="${d}" max="${todayStr()}"></div>
+    <div class="field"><label>What should happen to it?</label>
+      <div class="choice">
+        <button type="button" class="opt" data-mode="spread" aria-pressed="true"><b id="inSpreadT"></b><span id="inSpreadS"></span></button>
+        <button type="button" class="opt" data-mode="today" aria-pressed="false"><b id="inTodayT"></b><span id="inTodayS"></span></button>
+      </div></div>
+    <div class="two"><button type="button" class="btn ghost" data-act="close">Cancel</button><button class="btn" type="submit">Add money</button></div>
+  </form>`, () => {
+    wireAmount('inAmt');
+    const a = $('#inAmt'), dt = $('#inDate');
+    const update = () => {
+      const amt = parseAmount(a.value), date = dt.value || todayStr(), ym = date.slice(0, 7), dn = +date.slice(8, 10);
+      const days = daysIn(ym), n = days - dn + 1, isToday = date === todayStr();
+      $('#inSpreadT').textContent = 'Spread over the rest of ' + monthOnly(ym);
+      $('#inSpreadS').textContent = amt
+        ? '+' + rp(Math.floor(amt / n)) + ' a day for ' + n + (n === 1 ? ' day' : ' days') + ', through the ' + ord(days) + '.'
+        : 'Shared out evenly over the ' + n + (n === 1 ? ' day' : ' days') + ' left this month.';
+      $('#inTodayT').textContent = isToday ? 'Add it all to today' : 'Add it all to the ' + ord(dn);
+      if (isToday){
+        const av = summary(state, ym, dn).available;
+        $('#inTodayS').textContent = !amt ? 'Ready to spend right away. Whatever you don\'t use carries over.'
+          : av < 0 ? 'Pays back your ' + rp(-av) + ' debt first, leaving ' + rp(av + amt) + ' for today.'
+          : 'You\'ll have ' + rp(av + amt) + ' available today.';
+      } else $('#inTodayS').textContent = 'It lands on that day, and whatever you didn\'t use carries over to today.';
+    };
+    sheet.querySelectorAll('.opt[data-mode]').forEach(o => o.addEventListener('click', () => {
+      mode = o.dataset.mode;
+      sheet.querySelectorAll('.opt[data-mode]').forEach(x => x.setAttribute('aria-pressed', String(x === o)));
+    }));
+    a.addEventListener('input', update); dt.addEventListener('input', update); update();
+    $('#inForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const amount = parseAmount(a.value);
+      if (!amount) return fieldError('inAmt', 'Enter an amount above zero');
+      const date = dt.value || todayStr(), note = $('#inNote').value.trim();
+      checkpoint('Added ' + rp(amount) + ' money in' + (note ? ' (' + note + ')' : ''));
+      newId = uid();
+      if (!state.extra) state.extra = [];
+      state.extra.push({ id: newId, date, amount, note, mode });
+      save(); closeSheet(); render(); newId = null;
+      toast(mode === 'spread' ? rp(amount) + ' spread over the rest of the month' : 'Added ' + rp(amount) + (date === todayStr() ? ' to today' : ''));
     });
     setTimeout(() => a.focus(), 60);
   });
@@ -880,10 +1074,11 @@ function openRec(id, preset){
       const amount = parseAmount($('#rAmt').value);
       const name = $('#rName').value.trim();
       if (!name){ $('#rName').focus(); return; }
-      if (!amount){ $('#rAmt').focus(); $('#rAmtP').textContent = 'Enter an amount above zero'; return; }
+      if (!amount) return fieldError('rAmt', 'Enter an amount above zero');
       const obj = { name, amount, every: Math.max(1, Math.min(60, parseInt(ev.value, 10) || 1)),
         start: $('#rStart').value || ym, day: Math.max(1, Math.min(31, parseInt($('#rDay').value, 10) || 1)),
         active: r ? $('#rActive').checked : true, spread: $('#rSpread').checked };
+      checkpoint((r ? 'Edited ' : 'Added ') + obj.name);
       if (r) Object.assign(r, obj); else state.recurring.push({ id: uid(), ...obj });
       state.example = false; save(); closeSheet(); render(); renderOnboard();
     });
@@ -905,7 +1100,9 @@ function openImport(){
       try {
         const o = JSON.parse($('#impText').value);
         if (!o || typeof o.months !== 'object' || !Array.isArray(o.spend) || !Array.isArray(o.recurring) || !o.start) throw 0;
+        checkpoint('Restored a backup');
         state = o; state.example = false; state.setupDone = true; if (!state.seen) state.seen = [];
+        if (!state.extra) state.extra = [];
         save(); closeSheet(); if (ob) closeOnboard(); tab = 'today'; enterNext = true; spinNext = true; render(); toast('Backup restored');
       } catch (err){ $('#impErr').textContent = 'That doesn\'t look like a Jatah backup. Copy the whole text from "Copy backup", including the curly braces.'; }
     });
@@ -914,7 +1111,7 @@ function openImport(){
 
 function openErase(){
   openSheet(`<h3 id="sheetTitle">Erase everything?</h3>
-  <p class="muted" style="margin:0 0 14px">All spending, recurring payments and budgets on this phone will be deleted. Copy a backup first if you might want them later.</p>
+  <p class="muted" style="margin:0 0 14px">All spending, recurring payments and budgets on this phone will be deleted. If you change your mind, undo it from Recent changes in Setup.</p>
   <div class="two"><button type="button" class="btn ghost" data-act="close">Keep my data</button><button type="button" class="btn danger" data-act="erase-yes">Erase</button></div>`);
 }
 
@@ -1096,6 +1293,7 @@ function renderOnboard(){
       <div class="ob-dots" role="img" aria-label="Step ${ob.i + 1} of ${steps.length}">${steps.map((_, j) => `<i class="${j === ob.i ? 'on' : ''}"></i>`).join('')}</div></div>
     <div class="ob-body ${ob.dir > 0 ? 'fwd' : ob.dir < 0 ? 'bwd' : ''}"><h1 id="obTitle">${title}</h1><p class="lead">${lead}</p>${body}</div>
     <div class="ob-foot">${foot}</div></div>`;
+  if (kpTarget && !kpTarget.isConnected) closeKeypad();
   obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-modal', 'true'); obEl.setAttribute('aria-labelledby', 'obTitle');
   ob.dir = 0;
   // Keep what's typed in `ob` as it changes.
@@ -1117,15 +1315,115 @@ function obNext(){
 }
 function obFinish(){
   const c = obCtx();
+  checkpoint(state.setupDone ? 'Went through setup again' : 'Finished setup');
   if (c.firstMonth){ state.start = c.midd ? c.t : c.ym + '-01'; state.startLeft = c.midd ? (ob.left || 0) : null; }
   for (const k of Object.keys(state.months)) if (k >= c.ym) delete state.months[k];
   state.months[c.ym] = { amount: ob.amount || 0, every: ob.every, daily: ob.dailyNow || 0 };
   if (c.midd) state.months[c.next] = { amount: ob.amount || 0, every: ob.every, daily: ob.dailyNext || 0 };
+  setDailyFrom(state, c.firstMonth ? state.start : c.t, ob.dailyNow || 0);
+  if (c.midd) setDailyFrom(state, c.next + '-01', ob.dailyNext || 0);
   const again = state.setupDone;
   state.setupDone = true; state.example = false; save();
   closeOnboard();
   tab = 'today'; state.tab = tab; enterNext = true; spinNext = true; lastAvail = 0; lastRing = 0; render();
   toast(again ? 'Budget updated' : 'All set. Happy budgeting!');
+}
+
+/* ---------- number keypad for money fields ---------- */
+// Money fields are read-only so the phone keyboard never opens; this keypad fills them in instead.
+const keypad = $('#keypad');
+let kpTarget = null;
+function kpSet(digits){
+  digits = String(digits).replace(/\D/g, '').replace(/^0+/, '').slice(0, 12);
+  kpTarget.value = digits ? nf.format(+digits) : '';
+  kpTarget.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function openKeypad(input){
+  if (kpTarget === input && keypad.classList.contains('open')) return;
+  document.querySelectorAll('.money.active').forEach(m => m.classList.remove('active'));
+  kpTarget = input;
+  const wrap = input.closest('.money'); if (wrap) wrap.classList.add('active');
+  const lab = document.querySelector('label[for="' + input.id + '"]');
+  $('#kpLabel').textContent = lab ? lab.textContent : 'Amount';
+  keypad.classList.add('open'); keypad.setAttribute('aria-hidden', 'false');
+  setKb(keypad.offsetHeight);
+}
+function closeKeypad(){
+  if (!kpTarget && !keypad.classList.contains('open')) return;
+  document.querySelectorAll('.money.active').forEach(m => m.classList.remove('active'));
+  kpTarget = null; keypad.classList.remove('open'); keypad.setAttribute('aria-hidden', 'true');
+  setKb(0);
+}
+// Keep focus on the field while tapping keys.
+keypad.addEventListener('pointerdown', e => { if (e.target.closest('button')) e.preventDefault(); });
+keypad.addEventListener('mousedown', e => e.preventDefault());
+keypad.addEventListener('click', e => {
+  const k = e.target.closest('[data-key]'); if (!k || !kpTarget) return;
+  const key = k.dataset.key, digits = kpTarget.value.replace(/\D/g, '');
+  if (key === 'done'){ const t = kpTarget; closeKeypad(); t.blur(); return; }
+  if (key === 'del') kpSet(digits.slice(0, -1));
+  else if (key === '000'){ if (digits) kpSet(digits + '000'); }
+  else kpSet(digits + key);
+});
+document.addEventListener('focusin', e => {
+  if (e.target.matches && e.target.matches('[data-money]')) openKeypad(e.target);
+  else if (kpTarget && !(e.target.closest && e.target.closest('#keypad'))) closeKeypad();
+});
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-money]')) return openKeypad(e.target.closest('[data-money]'));
+  if (kpTarget && !e.target.closest('#keypad, .money, [data-add]')) closeKeypad();
+});
+// A real keyboard (on a computer) still works.
+document.addEventListener('keydown', e => {
+  if (!e.target.matches || !e.target.matches('[data-money]')) return;
+  if (kpTarget !== e.target) openKeypad(e.target);
+  const digits = e.target.value.replace(/\D/g, '');
+  if (/^[0-9]$/.test(e.key)){ e.preventDefault(); kpSet(digits + e.key); }
+  else if (e.key === 'Backspace'){ e.preventDefault(); kpSet(digits.slice(0, -1)); }
+});
+
+/* ---------- recent changes (undo) ---------- */
+// Before each change, a copy of everything is kept on this phone (last 20), so any change can be undone.
+const HKEY = 'jatah.history';
+function loadHist(){ try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e){ return []; } }
+function checkpoint(label){
+  try {
+    const snap = { ...state }; delete snap.tab;
+    const h = loadHist();
+    h.unshift({ t: Date.now(), label, data: JSON.stringify(snap) });
+    localStorage.setItem(HKEY, JSON.stringify(h.slice(0, 20)));
+  } catch (e){}
+}
+function whenText(ms){
+  const d = new Date(ms), now = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const dayStart = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((dayStart(now) - dayStart(d)) / 864e5);
+  return diff === 0 ? 'Today, ' + hm : diff === 1 ? 'Yesterday, ' + hm : d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0, 3) + ', ' + hm;
+}
+function recentChangesCard(){
+  const hist = loadHist();
+  return `<section class="card" style="margin-top:12px">
+    <h2>Recent changes</h2>
+    <p class="muted small" style="margin:0 0 4px">Made a mistake? Undo takes Jatah. back to how it was right before that change.</p>
+    <div class="list">${hist.length ? hist.map((h, i) => `<div class="item"><div class="main"><div class="t">${esc(h.label)}</div><div class="s">${whenText(h.t)}</div></div>
+      <button type="button" class="btn ghost sm" data-act="undo-to" data-i="${i}">Undo</button></div>`).join('')
+      : '<div class="empty">Nothing yet. Changes you make will show up here.</div>'}</div>
+  </section>`;
+}
+function openUndo(i){
+  const h = loadHist()[i]; if (!h) return;
+  openSheet(`<h3 id="sheetTitle">Undo this change?</h3>
+  <p style="margin:0 0 8px">Jatah. goes back to how it was right before <b>${esc(h.label)}</b> (${whenText(h.t)}).</p>
+  <p class="muted small" style="margin:0 0 14px">${i > 0 ? 'The ' + i + ' newer ' + (i > 1 ? 'changes' : 'change') + ' above it will be undone too. ' : ''}Changed your mind? This undo shows up in the list too, so you can undo it.</p>
+  <div class="two"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="button" class="btn" data-act="undo-yes" data-i="${i}">Undo</button></div>`);
+}
+function restoreCheckpoint(i){
+  const c = loadHist()[i]; if (!c) return;
+  checkpoint('Undid: ' + c.label);
+  const data = JSON.parse(c.data);
+  state = { ...data, tab: state.tab, seen: state.seen || [] };
+  save(); closeSheet(); enterNext = true; spinNext = true; render();
+  toast('Back to before: ' + c.label);
 }
 
 /* ---------- events ---------- */
@@ -1142,10 +1440,25 @@ document.addEventListener('click', async e => {
     case 'dismiss-example': state.example = false; save(); render(); break;
     case 'del-spend': {
       const i = state.spend.findIndex(x => x.id === id); if (i < 0) break;
+      checkpoint('Deleted ' + rp(state.spend[i].amount) + ' spending' + (state.spend[i].note ? ' (' + state.spend[i].note + ')' : ''));
       const [gone] = state.spend.splice(i, 1); save(); render();
       toast('Deleted ' + rp(gone.amount), () => { state.spend.push(gone); save(); render(); });
       break;
     }
+    case 'del-extra': {
+      const i = state.extra.findIndex(x => x.id === id); if (i < 0) break;
+      checkpoint('Deleted ' + rp(state.extra[i].amount) + ' money in' + (state.extra[i].note ? ' (' + state.extra[i].note + ')' : ''));
+      const [gone] = state.extra.splice(i, 1); save(); render();
+      toast('Deleted ' + rp(gone.amount), () => { state.extra.push(gone); save(); render(); });
+      break;
+    }
+    case 'add-kind': {
+      const dEl = $('#spDate') || $('#inDate');
+      openAddSpend(dEl ? dEl.value : null, b.dataset.kind);
+      break;
+    }
+    case 'undo-to': openUndo(+b.dataset.i); break;
+    case 'undo-yes': restoreCheckpoint(+b.dataset.i); break;
     case 'add-rec': openRec(); break;
     case 'ob-preset': openRec(null, REC_PRESETS[+b.dataset.i]); break;
     case 'rec-preset': {
@@ -1160,6 +1473,7 @@ document.addEventListener('click', async e => {
     case 'edit-rec': openRec(id); break;
     case 'del-rec': {
       const i = state.recurring.findIndex(x => x.id === id); if (i < 0) break;
+      checkpoint('Deleted ' + state.recurring[i].name);
       const [gone] = state.recurring.splice(i, 1); save(); closeSheet(); render(); renderOnboard();
       toast('Deleted ' + gone.name, () => { state.recurring.push(gone); save(); render(); renderOnboard(); });
       break;
@@ -1168,7 +1482,7 @@ document.addEventListener('click', async e => {
     case 'hist-next': enterNext = true; histYm = idxYm(ymIdx(histYm) + 1); openDay = null; render(); break;
     case 'toggle-day': openDay = openDay === b.dataset.day ? null : b.dataset.day; render(); break;
     case 'add-on': openAddSpend(b.dataset.day); break;
-    case 'use-rec': { const f = $('#fDailyNext') || $('#fDaily'); f.value = nf.format(+b.dataset.v); break; }
+    case 'use-rec': { const f = $('#fDailyNext') || $('#fDaily'); f.value = nf.format(+b.dataset.v); f.dispatchEvent(new Event('input')); break; }
     case 'set-every': $('#fEvery').value = b.dataset.n; setupUpdateRec && setupUpdateRec(); break;
     case 'redo-setup': openOnboard(); break;
     case 'go-setup': enterNext = true; tab = 'setup'; state.tab = tab; save(); window.scrollTo(0, 0); render(); break;
@@ -1186,7 +1500,7 @@ document.addEventListener('click', async e => {
     }
     case 'import': openImport(); break;
     case 'erase': openErase(); break;
-    case 'erase-yes': state = seed(); save(); closeSheet(); tab = 'today'; render(); openOnboard(); break;
+    case 'erase-yes': checkpoint('Erased everything'); state = seed(); save(); closeSheet(); tab = 'today'; render(); openOnboard(); break;
   }
 });
 $('#addBtn').addEventListener('click', () => openAddSpend(tab === 'history' && openDay ? openDay : null));

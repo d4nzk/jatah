@@ -3,13 +3,13 @@
 A budget tracker with just what you need, nothing more, nothing less. No accounts, no bank links, and your data never leaves your phone.
 
 <p align="center">
-  <img src="docs/screenshots/today-safe.png" width="200" alt="Today screen with Rp45.000 available, marked Safe">
-  <img src="docs/screenshots/today-low.png" width="200" alt="Today screen with Rp5.000 available, marked Running low">
-  <img src="docs/screenshots/today-debt.png" width="200" alt="Today screen at minus Rp20.000, marked In debt">
+  <img src="docs/screenshots/today-safe.png" width="200" alt="Today screen with money left for today, marked Safe">
+  <img src="docs/screenshots/today-low.png" width="200" alt="Today screen with little money left, marked Running low">
+  <img src="docs/screenshots/today-debt.png" width="200" alt="Today screen below zero, marked In debt">
 </p>
 <p align="center">
   <img src="docs/screenshots/history.png" width="200" alt="History screen listing each day's spending and balance">
-  <img src="docs/screenshots/add.png" width="200" alt="Add spending sheet with amount, note and date">
+  <img src="docs/screenshots/add.png" width="200" alt="Add spending sheet with the number keypad open">
   <img src="docs/screenshots/today-dark.png" width="200" alt="Today screen in dark mode">
 </p>
 
@@ -23,10 +23,13 @@ You give yourself an allowance every day, and whatever you don't spend carries o
 - **Available today**: everything you've been given so far this month, minus everything you've spent.
 - **Overspend?** You go negative, and tomorrow's allowance pays it back first.
 - **Starting mid-month?** Tell it how much you have left, and it plans the rest of the month around that. Your normal budget starts on the 1st.
+- **Got extra money?** Add it under *Money in* and choose: spread it over the rest of the month, or put it all on today (it pays back any debt first).
+- **Changed your daily budget?** It counts from today. Days that already happened keep the budget they had.
+- **Made a mistake?** *Setup → Recent changes* lets you undo any of your last 20 changes.
 
 The app also suggests a daily budget (what's left after recurring payments ÷ days in the month, rounded down to the thousand), and the 🔔 bell lets you know when payments come out, when something's due next month, when your daily budget won't fit, and when it's time for a backup.
 
-The ring on the Today screen shows today's money (what you carried over plus today's allowance). It starts each day full and empties as you spend:
+The thin inner ring shows how much of the month's budget is left. The thick outer ring shows today's money (what you carried over plus today's allowance). It starts each day full and empties as you spend:
 
 | | |
 | --- | --- |
